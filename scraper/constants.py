@@ -32,5 +32,3 @@ EMPTY_JUMP_DETAILS = {
         "wind_points": None,
         "rank": None,
 }
-
-DROPBOX_TOKEN = "pXxtG3hvpq8AAAAAAAAAAQAdXmEGSVKSfHxnIx9pSP8qzJwq1I9iLVcyVI2GYZy1"
