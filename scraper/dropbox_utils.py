@@ -1,11 +1,16 @@
-import dropbox
+import os
 
-from scraper.constants import DROPBOX_TOKEN
+import dropbox
+import environ
+
 from scraper.models import Participant, ParticipantCountry
 from scraper.serializers import RaceSerializer
 from scraper.utils import export_csv, export_zip
+from django.conf import settings
 
-dbx = dropbox.Dropbox(DROPBOX_TOKEN)
+environ.Env.read_env(os.path.join(settings.BASE_DIR, ".env"))
+
+dbx = dropbox.Dropbox(os.environ["DROPBOX_TOKEN"])
 
 
 def upload_file(file, file_name, directory_name):
