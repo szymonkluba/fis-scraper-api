@@ -2,6 +2,7 @@ import os
 
 import dropbox
 import environ
+from dropbox.exceptions import ApiError
 
 from scraper.models import Participant, ParticipantCountry
 from scraper.serializers import RaceSerializer
@@ -21,6 +22,18 @@ def upload_file(file, file_name, directory_name):
 def upload_zip(file, file_name, directory_name):
     path = f"/{directory_name}/{file_name}.zip"
     return dbx.files_upload(file.read(), path=path, autorename=True)
+
+
+def get_file_data(race):
+    if race.kind == "team":
+        path = f"/{race.tournament.name}/{str(race).replace(' ', '_')}.zip"
+    else:
+        path = f"/{race.tournament.name}/{str(race).replace(' ', '_')}.csv"
+    try:
+        response = dbx.files_get_metadata(path=path)
+        return response
+    except ApiError:
+        return upload_to_dropbox(race)
 
 
 def upload_to_dropbox(race):

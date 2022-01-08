@@ -2,9 +2,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .dropbox_utils import upload_to_dropbox
+from .dropbox_utils import get_file_data
 from .serializers import ScrapRaceSerializer
-from .utils import RaceNotFound, delete_race
+from .utils import RaceNotFound
 
 
 class ScrapRace(APIView):
@@ -23,13 +23,12 @@ class ScrapRace(APIView):
                     "status": "error"
                 }, status=status.HTTP_404_NOT_FOUND)
 
-            file_status = upload_to_dropbox(race)
-            delete_race(race)
+            file_status = get_file_data(race)
+
             return Response({
                 "fis_id": validated_data.get("fis_id"),
                 "details": validated_data.get("details"),
                 "id": file_status.id,
-                "is_downloadable": file_status.is_downloadable,
                 "name": file_status.name,
                 "path_lower": file_status.path_lower,
                 "path_display": file_status.path_display,
