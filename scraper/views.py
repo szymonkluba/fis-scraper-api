@@ -66,8 +66,8 @@ class DownloadFile(APIView):
     def post(self, request):
         file_metadata = FileMetadataSerializer(data=request.data)
         if file_metadata.is_valid():
-            file = download_file(file_metadata.validated_data.get("id"))
-            return FileResponse(file)
+            file, filename = download_file(file_metadata.validated_data.get("id"))
+            return FileResponse(file, filename=filename, as_attachment=True)
 
 
 class DownloadFolder(APIView):
@@ -76,7 +76,7 @@ class DownloadFolder(APIView):
         folder_metadata = FileMetadataSerializer(data=request.data)
         if folder_metadata.is_valid():
             file, filename = download_folder(folder_metadata.validated_data.get("id"))
-            return FileResponse(file, filename=filename)
+            return FileResponse(file, filename=filename, as_attachment=True)
 
 
 class DownloadCurrentFiles(APIView):
@@ -85,4 +85,4 @@ class DownloadCurrentFiles(APIView):
         current_files = FolderSerializer(data=request.data)
         if current_files.is_valid():
             file, filename = download_current_files(current_files.validated_data.get("entries"))
-            return FileResponse(file, filename=filename)
+            return FileResponse(file, filename=filename, as_attachment=True)
