@@ -22,3 +22,26 @@ class ScrapRaceSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         pass
+
+
+class FileMetadataSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    name = serializers.CharField()
+    path_lower = serializers.CharField()
+    path_display = serializers.CharField()
+
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+        pass
+
+
+class FolderSerializer(serializers.Serializer):
+    entries = FileMetadataSerializer(many=True)
+
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+        pass
