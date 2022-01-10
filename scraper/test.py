@@ -1,5 +1,7 @@
 from dropbox import Dropbox
+from dropbox.exceptions import ApiError, BadInputError
 from rest_framework import serializers
+from stone.backends.python_rsrc.stone_validators import ValidationError
 
 dbx = Dropbox("pXxtG3hvpq8AAAAAAAAAAQAdXmEGSVKSfHxnIx9pSP8qzJwq1I9iLVcyVI2GYZy1")
 
@@ -28,5 +30,11 @@ class FolderSerializer(serializers.Serializer):
 
 
 if __name__ == '__main__':
-    file = dbx.files_download(path="/Viessmann FIS Ski Jumping World Cup/Wisla_(POL)_HS134_2021-12-04.zip")
-    print(file, type(file))
+    try:
+        file = dbx.files_download(path="/")
+    except ApiError as e:
+        print(e.error, e.user_message_text, e.user_message_locale)
+    except ValidationError as e:
+        print(e.message, e)
+    except BadInputError as e:
+        print(e, e.message)
