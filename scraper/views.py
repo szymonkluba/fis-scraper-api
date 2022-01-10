@@ -1,12 +1,11 @@
-from django.http import Http404, FileResponse
-from dropbox.exceptions import ApiError
-from rest_framework import status
+from django.http import FileResponse
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .dropbox_utils import get_file_data, list_folder, download_file, download_folder, download_current_files
+from .exceptions import InvalidDataProvided
 from .serializers import ScrapRaceSerializer, FolderSerializer, FileMetadataSerializer
-from .utils import RaceNotFound
+from .utils import delete_race
 
 
 class ScrapRace(APIView):
@@ -15,42 +14,22 @@ class ScrapRace(APIView):
         serializer = ScrapRaceSerializer(data=request.data)
         if serializer.is_valid():
             validated_data = serializer.validated_data
-            try:
-                race = serializer.save()
-            except RaceNotFound:
-
-                return Response({
-                    "fis_id": validated_data.get("fis_id"),
-                    "details": validated_data.get("details"),
-                    "status": "error"
-                }, status=status.HTTP_404_NOT_FOUND)
-
-            file_status = get_file_data(race)
-
+            race = serializer.save()
+            file_metadata = FileMetadataSerializer(get_file_data(race))
+            delete_race(race)
             return Response({
                 "fis_id": validated_data.get("fis_id"),
                 "details": validated_data.get("details"),
-                "id": file_status.id,
-                "name": file_status.name,
-                "path_lower": file_status.path_lower,
-                "path_display": file_status.path_display,
-                "status": "success",
+                **file_metadata.data,
             })
 
-        return Response({
-            "fis_id": serializer.initial_data.get("fis_id"),
-            "details": serializer.initial_data.get("details"),
-            "status": "error"
-        }, status=status.HTTP_400_BAD_REQUEST)
+        raise InvalidDataProvided
 
 
 class ListFolder(APIView):
 
     def get_object(self, path):
-        try:
-            return list_folder(path)
-        except ApiError:
-            raise Http404
+        return list_folder(path)
 
     def get(self, request, path=None, format=None):
         if path is not None:

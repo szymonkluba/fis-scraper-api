@@ -1,32 +1,60 @@
+import functools
 import io
 import os
 
-import dropbox
 import environ
+from django.conf import settings
 from django.http import Http404
-from dropbox.exceptions import ApiError
+from dropbox import Dropbox
+from dropbox.exceptions import ApiError, BadInputError, RateLimitError, AuthError, HttpError
 from dropbox.files import DownloadError
 
+from scraper.exceptions import InvalidDataProvided, TooManyRequests, Unauthorized, CommunicationError
 from scraper.models import Participant, ParticipantCountry
 from scraper.serializers import RaceSerializer
 from scraper.utils import export_csv, export_zip
-from django.conf import settings
 
 environ.Env.read_env(os.path.join(settings.BASE_DIR, ".env"))
 
-dbx = dropbox.Dropbox(os.environ["DROPBOX_TOKEN"])
+
+def exceptions(function):
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        try:
+            return function(*args, **kwargs)
+        except ApiError:
+            raise InvalidDataProvided
+        except BadInputError:
+            raise InvalidDataProvided
+        except RateLimitError:
+            raise TooManyRequests
+        except AuthError:
+            raise Unauthorized
+        except HttpError:
+            raise CommunicationError
+
+    return wrapper
 
 
+dbx = Dropbox(os.environ["DROPBOX_TOKEN"])
+
+
+@exceptions
 def upload_file(file, file_name, directory_name):
     path = f"/{directory_name}/{file_name}.csv"
-    return dbx.files_upload(file.read(), path=path, autorename=True)
+    try:
+        return dbx.files_upload(file.read(), path=path, autorename=True)
+    except ApiError:
+        raise
 
 
+@exceptions
 def upload_zip(file, file_name, directory_name):
     path = f"/{directory_name}/{file_name}.zip"
     return dbx.files_upload(file.read(), path=path, autorename=True)
 
 
+@exceptions
 def get_file_data(race):
     if race.kind == "team":
         path = f"/{race.tournament.name}/{str(race).replace(' ', '_')}.zip"
@@ -39,10 +67,12 @@ def get_file_data(race):
         return upload_to_dropbox(race)
 
 
+@exceptions
 def list_folder(path):
     return dbx.files_list_folder(path=path)
 
 
+@exceptions
 def download_file(path):
     try:
         metadata, response = dbx.files_download(path=path)
@@ -53,6 +83,7 @@ def download_file(path):
     return io.BytesIO(response.content), metadata.name
 
 
+@exceptions
 def download_folder(path):
     try:
         metadata, response = dbx.files_download_zip(path=path)
@@ -62,8 +93,8 @@ def download_folder(path):
     return io.BytesIO(response.content), f"{metadata.metadata.name}.zip"
 
 
+@exceptions
 def download_current_files(files):
-
     temp_folder_name = "/current"
     dbx.files_create_folder_v2(path=temp_folder_name)
     for file in files:
@@ -73,6 +104,7 @@ def download_current_files(files):
     return file, filename
 
 
+@exceptions
 def upload_to_dropbox(race):
     participants = Participant.objects.filter(race=race)
     countries = ParticipantCountry.objects.filter(race=race)
