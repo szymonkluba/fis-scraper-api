@@ -87,7 +87,6 @@ def download_file(path):
 def download_folder(path):
     try:
         metadata, response = dbx.files_download_zip(path=path)
-        print(metadata, response)
     except ApiError:
         raise Http404
     return io.BytesIO(response.content), f"{metadata.metadata.name}.zip"
