@@ -118,7 +118,7 @@ def generate_team_participants(website, race):
                 defaults={"fis_code": country_details["fis_code"]}
             )
 
-            ParticipantCountry.objects.get_or_create(
+            ParticipantCountry.objects.update_or_create(
                 race=race,
                 country=country,
                 **maps.map_country_as_participant(entries)
@@ -130,7 +130,7 @@ def generate_team_participants(website, race):
 
             for line in row.select(const.ENTRIES_SIMPLE_SELECTOR):
                 entries = list(map(website.get_text, line.select(const.ENTRIES_INDIVIDUAL_SELECTOR)))
-                jumper, _ = Jumper.objects.get_or_create(**maps.map_team_jumper(entries))
+                jumper, _ = Jumper.objects.update_or_create(**maps.map_team_jumper(entries))
                 jump1_data, jump2_data = maps.map_team_jumps(entries)
                 jump1, jump2 = None, None
 
@@ -140,10 +140,10 @@ def generate_team_participants(website, race):
                 if jump2_data:
                     jump2 = Jump.objects.create(**jump2_data)
 
-                Participant.objects.get_or_create(race=race,
-                                                  jumper=jumper,
-                                                  jump_1=jump1,
-                                                  jump_2=jump2)
+                Participant.objects.update_or_create(race=race,
+                                                     jumper=jumper,
+                                                     jump_1=jump1,
+                                                     jump_2=jump2)
 
 
 def generate_detail_participants(website, race):
@@ -156,7 +156,7 @@ def generate_detail_participants(website, race):
             entries = list(map(website.get_text, line.select(const.ENTRIES_INDIVIDUAL_SELECTOR)))
 
             if index == 0:
-                country, _ = Country.objects.get_or_create(**maps.map_jumper_country_detail(entries))
+                country, _ = Country.objects.update_or_create(**maps.map_jumper_country_detail(entries))
                 jumper, _ = Jumper.objects.update_or_create(**maps.map_details_jumper(entries),
                                                             defaults={"nation": country})
                 other_params = maps.map_other_params_detail(entries)
@@ -180,7 +180,7 @@ def generate_simple_participants(website, race):
 
             jump_1, jump_2 = None, None
             entries = list(map(website.get_text, line.select(const.ENTRIES_INDIVIDUAL_SELECTOR)))
-            country, _ = Country.objects.get_or_create(**maps.map_jumper_country_simple(entries))
+            country, _ = Country.objects.update_or_create(**maps.map_jumper_country_simple(entries))
             jumper_details = maps.map_simple_jumper(entries)
             jumper, _ = Jumper.objects.update_or_create(name=jumper_details["name"],
                                                         defaults={"nation": country, **jumper_details})
@@ -192,8 +192,8 @@ def generate_simple_participants(website, race):
             if jump_2_details:
                 jump_2 = Jump.objects.create(**jump_2_details, **EMPTY_JUMP_DETAILS)
 
-            Participant.objects.get_or_create(jumper=jumper, jump_1=jump_1, jump_2=jump_2, race=race,
-                                              **maps.map_other_params_simple(entries))
+            Participant.objects.update_or_create(jumper=jumper, jump_1=jump_1, jump_2=jump_2, race=race,
+                                                 **maps.map_other_params_simple(entries))
 
 
 def generate_participants(website, race):
@@ -284,7 +284,7 @@ def get_race(fis_id, details):
         race = Race.objects.get(fis_id=fis_id, details=details)
     except Race.DoesNotExist:
         website = Website(fis_id, details)
-        tournament, _ = Tournament.objects.get_or_create(name=website.get_race_tournament())
+        tournament, _ = Tournament.objects.update_or_create(name=website.get_race_tournament())
 
         race = Race.objects.create(
             fis_id=fis_id,

@@ -65,3 +65,8 @@ class DownloadCurrentFiles(APIView):
         if current_files.is_valid():
             file, filename = download_current_files(current_files.validated_data.get("entries"))
             return FileResponse(file, filename=filename, as_attachment=True)
+
+class WakieWakie(APIView):
+
+    def get(self, request):
+        return Response("Server is up")
