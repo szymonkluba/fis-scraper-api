@@ -8,5 +8,6 @@ urlpatterns = [
     path("list_folder/<str:path>", views.ListFolder.as_view()),
     path("download/file", views.DownloadFile.as_view()),
     path("download/folder", views.DownloadFolder.as_view()),
-    path("download/current", views.DownloadCurrentFiles.as_view())
+    path("download/current", views.DownloadCurrentFiles.as_view()),
+    path("wakie-wakie", views.WakieWakie.as_view())
 ]
