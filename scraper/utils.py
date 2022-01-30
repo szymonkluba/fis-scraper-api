@@ -89,7 +89,6 @@ class Website:
 
         if self.details:
             rows = self.soup.select(const.ROW_DETAILED_SELECTOR)[3:]
-            print(rows)
 
         if "No results" in str(rows):
             raise RaceDataEmpty
