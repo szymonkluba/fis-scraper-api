@@ -303,8 +303,13 @@ def get_race(fis_id, details):
 
 def delete_race(race):
     for participant in race.participant_set.all():
+        if participant.jumper:
+            participant.jumper.delete()
         if participant.jump_1:
             participant.jump_1.delete()
         if participant.jump_2:
             participant.jump_2.delete()
+    for participant in race.participantcountry_set.all():
+        if participant.country:
+            participant.country.delete()
     race.delete()
