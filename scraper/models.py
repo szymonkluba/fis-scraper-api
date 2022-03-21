@@ -53,7 +53,7 @@ class Country(models.Model):
 
 
 class Jump(models.Model):
-    distance = models.FloatField()
+    distance = models.FloatField(null=True, blank=True)
     distance_points = models.FloatField(null=True, blank=True)
     speed = models.FloatField(null=True, blank=True)
     judge_a = models.FloatField(null=True, blank=True)
@@ -66,7 +66,7 @@ class Jump(models.Model):
     gate_points = models.FloatField(null=True, blank=True)
     wind = models.FloatField(null=True, blank=True)
     wind_points = models.FloatField(null=True, blank=True)
-    total_points = models.FloatField()
+    total_points = models.FloatField(null=True, blank=True)
     rank = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
