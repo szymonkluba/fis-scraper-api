@@ -136,4 +136,5 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:4200",
     "https://fisscraper.herokuapp.com",
     "https://fis-scraper.herokuapp.com",
+    "https://szymonkluba.github.io/fisscraper"
 ]
