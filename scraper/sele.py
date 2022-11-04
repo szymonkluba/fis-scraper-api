@@ -11,7 +11,7 @@ environ.Env.read_env(os.path.join(settings.BASE_DIR, ".env"))
 
 
 def get_dynamic_content(url):
-    GOOGLE_CHROME_PATH = os.environ.get("$GOOGLE_CHROME_BIN")
+    GOOGLE_CHROME_PATH = os.environ.get("GOOGLE_CHROME_BIN")
     CHROMEDRIVER_PATH = os.environ.get("CHROMEDRIVER_PATH")
 
     chrome_options = Options()
