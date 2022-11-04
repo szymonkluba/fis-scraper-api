@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 import os
 from pathlib import Path
-import django_heroku
 import environ
 
 
@@ -138,5 +137,3 @@ CORS_ALLOWED_ORIGINS = [
     "https://fisscraper.herokuapp.com",
     "https://fis-scraper.herokuapp.com",
 ]
-
-django_heroku.settings(locals())

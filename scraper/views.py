@@ -5,7 +5,6 @@ from rest_framework.views import APIView
 from .dropbox_utils import get_file_data, list_folder, download_file, download_folder, download_current_files
 from .exceptions import InvalidDataProvided
 from .serializers import ScrapRaceSerializer, FolderSerializer, FileMetadataSerializer
-from .utils import delete_race
 
 
 class ScrapRace(APIView):
@@ -16,7 +15,6 @@ class ScrapRace(APIView):
             validated_data = serializer.validated_data
             race = serializer.save()
             file_metadata = FileMetadataSerializer(get_file_data(race))
-            delete_race(race)
             return Response({
                 "fis_id": validated_data.get("fis_id"),
                 "details": validated_data.get("details"),

@@ -18,7 +18,7 @@ class Website:
 
     def __init__(self, race_id: int, details: bool = False):
         self.race_id = race_id
-        website = requests.get(f"{const.RACE_URL}{self.race_id}")
+        website = requests.get(f"{const.RACE_URL}{self.race_id}", proxies=Website.get_proxy())
 
         if website.status_code != 200:
             raise RaceNotFound
@@ -102,6 +102,16 @@ class Website:
             return country.strip() if country else None
 
         return tag.string.strip() if tag.string else None
+
+    @staticmethod
+    def get_proxy():
+        response = \
+        requests.get("http://proxy11.com/api/proxy.json?key=NTI5NQ.Y2WHTw.Uc9KF2jC5-3XlCa31jwDmyegEYE&limit=1").json()[
+            0]
+
+        return {
+            "http": f"{response['ip']}:{response['port']}"
+        }
 
 
 def generate_team_participants(website, race):
@@ -265,20 +275,6 @@ def export_zip(files):
     return temp_file
 
 
-def get_files_list(queryset_list, filenames):
-    files_list = []
-
-    for index, queryset in enumerate(queryset_list):
-        temp_file = io.StringIO()
-        file = {
-            "filename": filenames[index],
-            "data": export_csv(queryset, temp_file)
-        }
-        files_list.append(file)
-
-    return files_list
-
-
 def get_race(fis_id, details):
     try:
         race = Race.objects.get(fis_id=fis_id, details=details)
@@ -299,17 +295,3 @@ def get_race(fis_id, details):
         generate_participants(website, race)
 
     return race
-
-
-def delete_race(race):
-    for participant in race.participant_set.all():
-        if participant.jumper:
-            participant.jumper.delete()
-        if participant.jump_1:
-            participant.jump_1.delete()
-        if participant.jump_2:
-            participant.jump_2.delete()
-    for participant in race.participantcountry_set.all():
-        if participant.country:
-            participant.country.delete()
-    race.delete()
