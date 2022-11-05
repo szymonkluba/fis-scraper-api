@@ -9,6 +9,7 @@ from django.conf import settings
 
 environ.Env.read_env(os.path.join(settings.BASE_DIR, ".env"))
 
+PROXY_PROVIDER_URL = "http://proxy11.com/api/proxy.json?key=NTI5NQ.Y2WHTw.Uc9KF2jC5-3XlCa31jwDmyegEYE&limit=1"
 
 def get_dynamic_content(url):
     GOOGLE_CHROME_PATH = os.environ.get("GOOGLE_CHROME_BIN")
@@ -31,6 +32,6 @@ def get_dynamic_content(url):
 
 
 def get_proxy_url():
-    response = requests.get("http://proxy11.com/api/proxy.json?key=NTI5NQ.Y2WHTw.Uc9KF2jC5-3XlCa31jwDmyegEYE&limit=1").json()[0]
+    response = requests.get(PROXY_PROVIDER_URL).json()[0]
 
-    return f"--proxy-server={response['ip']}:{response['port']}"
+    return f"--proxy-server=http://{response['ip']}:{response['port']}"

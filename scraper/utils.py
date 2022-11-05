@@ -15,8 +15,11 @@ from .sele import get_dynamic_content
 
 
 class Website:
+    PROXY_PROVIDER_URL = "http://proxy11.com/api/proxy.json?key=NTI5NQ.Y2WHTw.Uc9KF2jC5-3XlCa31jwDmyegEYE&limit=1"
 
     def __init__(self, race_id: int, details: bool = False):
+
+
         self.race_id = race_id
         website = requests.get(f"{const.RACE_URL}{self.race_id}", proxies=Website.get_proxy())
 
@@ -105,12 +108,12 @@ class Website:
 
     @staticmethod
     def get_proxy():
-        response = \
-        requests.get("http://proxy11.com/api/proxy.json?key=NTI5NQ.Y2WHTw.Uc9KF2jC5-3XlCa31jwDmyegEYE&limit=1").json()[
-            0]
+        response = requests.get(Website.PROXY_PROVIDER_URL).json()[0]
+
+        print(f"http://{response['ip']}:{response['port']}")
 
         return {
-            "http": f"{response['ip']}:{response['port']}"
+            "http": f"http://{response['ip']}:{response['port']}"
         }
 
 
