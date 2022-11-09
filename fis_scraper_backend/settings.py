@@ -28,11 +28,13 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = os.environ["DJANGO_SECRET"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     "fisscraper.pythonanywhere.com",
-    "127.0.0.1"
+    "127.0.0.1",
+    "fisscraper.online",
+    "webapp-23877.eu.pythonanywhere.com"
 ]
 
 
