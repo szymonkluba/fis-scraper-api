@@ -34,7 +34,8 @@ ALLOWED_HOSTS = [
     "fisscraper.pythonanywhere.com",
     "127.0.0.1",
     "fisscraper.online",
-    "webapp-23877.eu.pythonanywhere.com"
+    "www.fisscraper.online",
+    "webapp-23877.eu.pythonanywhere.com",
 ]
 
 
