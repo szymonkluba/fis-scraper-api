@@ -10,8 +10,7 @@ from dropbox.exceptions import ApiError, BadInputError, RateLimitError, AuthErro
 from dropbox.files import DownloadError
 
 from scraper.exceptions import InvalidDataProvided, TooManyRequests, Unauthorized, CommunicationError
-from scraper.models import Participant, ParticipantCountry
-from scraper.serializers import RaceSerializer
+from scraper.serializers import FlatDataRaceSerializer
 from scraper.utils import export_csv, export_zip
 
 environ.Env.read_env(os.path.join(settings.BASE_DIR, ".env"))
@@ -105,10 +104,10 @@ def download_current_files(files):
 
 @exceptions
 def upload_to_dropbox(race):
-    participants = Participant.objects.filter(race=race)
-    countries = ParticipantCountry.objects.filter(race=race)
-    serializer = RaceSerializer(race, many=False)
+    serializer = FlatDataRaceSerializer(race, many=False)
     filename = str(race).replace(" ", "_")
+    participants = serializer.data.get("participant_set")
+    countries = serializer.data.get("participantcountry_set")
     file = export_csv(participants)
 
     if not countries:

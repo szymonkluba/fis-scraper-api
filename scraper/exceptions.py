@@ -7,6 +7,12 @@ class ServiceUnavailable(APIException):
     default_code = "service_unavailable"
 
 
+class SomethingWentWrong(APIException):
+    status_code = 500
+    default_detail = "Something went wrong:/"
+    default_code = "something_went_wrong"
+
+
 class RaceNotFound(APIException):
     status_code = 404
     default_detail = "Race with such FIS ID cannot be found."

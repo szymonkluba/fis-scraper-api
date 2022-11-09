@@ -1,13 +1,16 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import SimpleRouter
 
 from . import views
 
+
+router = SimpleRouter()
+router.register("scrap_race", views.ScrapRaceViewSet, basename="scrap-race")
+router.register("folder", views.FolderViewSet, basename="folder")
+router.register("download", views.DownloadViewSet, basename="download")
+router.register("race", views.RaceViewSet, basename="race")
+
 urlpatterns = [
-    path("scrap_race", views.ScrapRace.as_view()),
-    path("list_folder", views.ListFolder.as_view()),
-    path("list_folder/<str:path>", views.ListFolder.as_view()),
-    path("download/file", views.DownloadFile.as_view()),
-    path("download/folder", views.DownloadFolder.as_view()),
-    path("download/current", views.DownloadCurrentFiles.as_view()),
-    path("wakie-wakie", views.WakieWakie.as_view())
+    path("wakie-wakie", views.WakieWakie.as_view(), name="wakie-wakie"),
+    path("", include(router.urls))
 ]

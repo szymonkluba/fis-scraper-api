@@ -116,3 +116,14 @@ class ParticipantCountry(models.Model):
 
     def __str__(self):
         return f"{self.country.name} {self.race.place} {self.race.date.strftime('%Y-%m-%d')}"
+
+
+class FileMetadata(models.Model):
+    id = models.CharField(max_length=50, primary_key=True)
+    name = models.CharField(max_length=200)
+    path_lower = models.CharField(max_length=200)
+    path_display = models.CharField(max_length=200)
+
+
+class Folder(models.Model):
+    entries = models.ManyToManyField(to="FileMetadata", related_name="folder", related_query_name="folder")

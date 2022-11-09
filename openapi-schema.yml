@@ -1,0 +1,531 @@
+openapi: 3.0.3
+info:
+  title: FIS Scraper API
+  version: 1.0.0
+  description: API for scraping ski jumping results from fis-ski.com
+paths:
+  /api/:
+    get:
+      operationId: api_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/download/current:
+    post:
+      operationId: api_download_current_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Folder'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Folder'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Folder'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+          description: ''
+  /api/download/file:
+    post:
+      operationId: api_download_file_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileMetadata'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FileMetadata'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FileMetadata'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadata'
+          description: ''
+  /api/download/folder:
+    post:
+      operationId: api_download_folder_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileMetadata'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FileMetadata'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FileMetadata'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadata'
+          description: ''
+  /api/folder:
+    get:
+      operationId: api_folder_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+          description: ''
+  /api/folder/{path}:
+    get:
+      operationId: api_folder_retrieve_2
+      parameters:
+      - in: path
+        name: path
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+          description: ''
+  /api/race:
+    get:
+      operationId: api_race_list
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RaceList'
+          description: ''
+  /api/race/{id}:
+    get:
+      operationId: api_race_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RaceDetails'
+          description: ''
+  /api/scrap_race:
+    post:
+      operationId: api_scrap_race_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScrapRace'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ScrapRace'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ScrapRace'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScrapRace'
+          description: ''
+  /api/wakie-wakie:
+    get:
+      operationId: api_wakie_wakie_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    Country:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        fis_code:
+          type: integer
+          nullable: true
+        name:
+          type: string
+          maxLength: 50
+      required:
+      - id
+      - name
+    FileMetadata:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 50
+        name:
+          type: string
+          maxLength: 200
+        path_lower:
+          type: string
+          maxLength: 200
+        path_display:
+          type: string
+          maxLength: 200
+      required:
+      - id
+      - name
+      - path_display
+      - path_lower
+    Folder:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileMetadata'
+      required:
+      - entries
+      - id
+    Jump:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        distance:
+          type: number
+          format: double
+          nullable: true
+        distance_points:
+          type: number
+          format: double
+          nullable: true
+        speed:
+          type: number
+          format: double
+          nullable: true
+        judge_a:
+          type: number
+          format: double
+          nullable: true
+        judge_b:
+          type: number
+          format: double
+          nullable: true
+        judge_c:
+          type: number
+          format: double
+          nullable: true
+        judge_d:
+          type: number
+          format: double
+          nullable: true
+        judge_e:
+          type: number
+          format: double
+          nullable: true
+        judge_points:
+          type: number
+          format: double
+          nullable: true
+        gate:
+          type: integer
+          nullable: true
+        gate_points:
+          type: number
+          format: double
+          nullable: true
+        wind:
+          type: number
+          format: double
+          nullable: true
+        wind_points:
+          type: number
+          format: double
+          nullable: true
+        total_points:
+          type: number
+          format: double
+          nullable: true
+        rank:
+          type: integer
+          nullable: true
+      required:
+      - id
+    Jumper:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        nation:
+          allOf:
+          - $ref: '#/components/schemas/Country'
+          readOnly: true
+        fis_code:
+          type: integer
+          nullable: true
+        name:
+          type: string
+          maxLength: 100
+        born:
+          type: integer
+          nullable: true
+      required:
+      - id
+      - name
+      - nation
+    KindEnum:
+      enum:
+      - team
+      - men
+      - women
+      - other
+      type: string
+    Participant:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        jump_1:
+          allOf:
+          - $ref: '#/components/schemas/Jump'
+          readOnly: true
+        jump_2:
+          allOf:
+          - $ref: '#/components/schemas/Jump'
+          readOnly: true
+        jumper:
+          allOf:
+          - $ref: '#/components/schemas/Jumper'
+          readOnly: true
+        rank:
+          type: integer
+          nullable: true
+        bib:
+          type: integer
+          nullable: true
+        total_points:
+          type: number
+          format: double
+          nullable: true
+        diff:
+          type: number
+          format: double
+          nullable: true
+        disqualified:
+          type: boolean
+      required:
+      - id
+      - jump_1
+      - jump_2
+      - jumper
+    ParticipantCountry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        rank:
+          type: integer
+          nullable: true
+        total_points:
+          type: number
+          format: double
+          nullable: true
+        country:
+          type: integer
+      required:
+      - country
+      - id
+    RaceDetails:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        fis_id:
+          type: integer
+        place:
+          type: string
+          maxLength: 50
+        tournament:
+          allOf:
+          - $ref: '#/components/schemas/Tournament'
+          readOnly: true
+        date:
+          type: string
+          format: date-time
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        hill_size:
+          type: string
+          maxLength: 10
+        details:
+          type: boolean
+        participant_set:
+          type: array
+          items:
+            $ref: '#/components/schemas/Participant'
+          readOnly: true
+        participantcountry_set:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantCountry'
+          readOnly: true
+      required:
+      - date
+      - hill_size
+      - kind
+      - participant_set
+      - participantcountry_set
+      - place
+      - tournament
+      - uuid
+    RaceList:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          readOnly: true
+        fis_id:
+          type: integer
+        place:
+          type: string
+          maxLength: 50
+        tournament:
+          allOf:
+          - $ref: '#/components/schemas/Tournament'
+          readOnly: true
+        date:
+          type: string
+          format: date-time
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        hill_size:
+          type: string
+          maxLength: 10
+        details:
+          type: boolean
+      required:
+      - date
+      - hill_size
+      - kind
+      - place
+      - tournament
+      - uuid
+    ScrapRace:
+      type: object
+      properties:
+        fis_id:
+          type: integer
+        details:
+          type: boolean
+          default: false
+      required:
+      - fis_id
+    Tournament:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+      required:
+      - id
+      - name
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

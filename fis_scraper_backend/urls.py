@@ -1,22 +1,14 @@
-"""fis_scraper_backend URL Configuration
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path, include
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+
+import scraper.views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('scraper.urls'))
+    path('', scraper.views.index, name="index"),
+    path('admin/', admin.site.urls, name='scraper-admin'),
+    path('api/', include('scraper.urls'), name='scraper-api'),
+    path('openapi/', SpectacularAPIView.as_view(), name='openapi-schema'),
+    path('openapi/swagger/', SpectacularSwaggerView.as_view(url_name='openapi-schema'), name='swagger'),
+    path('openapi/redoc', SpectacularRedocView.as_view(url_name='openapi-schema'), name='redoc'),
 ]

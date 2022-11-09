@@ -1,27 +1,23 @@
-import csv
 import datetime
 import io
 import re
 import zipfile
 
 import requests
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, Tag, Comment
+from pandas import DataFrame
 
 from . import constants as const, maps
-from .constants import EMPTY_JUMP_DETAILS
-from .exceptions import RaceNotFound, RaceDataEmpty
+from .exceptions import RaceNotFound, RaceDataEmpty, SomethingWentWrong
 from .models import Country, Jumper, Jump, Participant, ParticipantCountry, Race, Tournament
 from .sele import get_dynamic_content
 
 
 class Website:
-    PROXY_PROVIDER_URL = "http://proxy11.com/api/proxy.json?key=NTI5NQ.Y2WHTw.Uc9KF2jC5-3XlCa31jwDmyegEYE&limit=1"
-
     def __init__(self, race_id: int, details: bool = False):
 
-
         self.race_id = race_id
-        website = requests.get(f"{const.RACE_URL}{self.race_id}", proxies=Website.get_proxy())
+        website = requests.get(f"{const.RACE_URL}{self.race_id}")
 
         if website.status_code != 200:
             raise RaceNotFound
@@ -31,11 +27,8 @@ class Website:
 
         if self.details:
             website = get_dynamic_content(f"{const.RACE_URL}{self.race_id}{const.DETAILS_PARAM}")
+            self.soup = BeautifulSoup(website, features="lxml")
 
-        else:
-            website = website.content
-
-        self.soup = BeautifulSoup(website, features="lxml")
         self.data_rows = self.get_rows()
 
     def get_race_place(self):
@@ -88,10 +81,10 @@ class Website:
         return "other"
 
     def get_rows(self):
-        rows = self.soup.select(const.ROW_SIMPLE_SELECTOR)[1:]
+        rows = self.soup.select(const.ROW_SIMPLE_SELECTOR)
 
         if self.details:
-            rows = self.soup.select(const.ROW_DETAILED_SELECTOR)[3:]
+            rows = self.soup.select(const.ROW_DETAILED_SELECTOR)
 
         if "No results" in str(rows):
             raise RaceDataEmpty
@@ -106,107 +99,127 @@ class Website:
 
         return tag.string.strip() if tag.string else None
 
-    @staticmethod
-    def get_proxy():
-        response = requests.get(Website.PROXY_PROVIDER_URL).json()[0]
 
-        print(f"http://{response['ip']}:{response['port']}")
+def generate_team_participants(website: Website, race):
+    rows = list(map(process_rows, website.data_rows))
+    rows = fill_countries(rows)
 
-        return {
-            "http": f"http://{response['ip']}:{response['port']}"
-        }
+    jumpers_data_frame = DataFrame([rows[index] for index in range(len(rows)) if index % 5 != 0])
+    countries_data_frame = DataFrame(rows[::5])
 
+    jumpers_data_frame.replace("", None, inplace=True)
+    jumpers_data_frame.dropna(how="all", axis=1, inplace=True)
 
-def generate_team_participants(website, race):
-    rows = website.data_rows
+    countries_data_frame.replace("", None, inplace=True)
+    countries_data_frame.dropna(how="all", axis=1, inplace=True)
 
-    for row in rows[0::5]:
+    try:
+        jumpers_data_frame.columns = const.TEAM_JUMPERS_COLUMNS
+        countries_data_frame.columns = const.TEAM_COUNTRIES_COLUMNS
+    except ValueError:
+        race.delete()
+        if jumpers_data_frame.size == 0 and countries_data_frame.size == 0:
+            raise RaceDataEmpty
+        raise SomethingWentWrong
 
-        for line in row.select(const.ENTRIES_SIMPLE_SELECTOR):
-            entries = list(map(website.get_text, line.select(const.ENTRIES_INDIVIDUAL_SELECTOR)))
-            country_details = maps.map_team_country(entries)
+    for _, row in countries_data_frame.iterrows():
+        country_details = maps.map_team_country(row)
 
-            country, _ = Country.objects.update_or_create(
-                name=country_details["name"],
-                defaults={"fis_code": country_details["fis_code"]}
-            )
+        country, _ = Country.objects.update_or_create(
+            name=country_details["name"],
+            defaults={"fis_code": country_details["fis_code"]}
+        )
 
-            ParticipantCountry.objects.update_or_create(
-                race=race,
-                country=country,
-                **maps.map_country_as_participant(entries)
-            )
+        ParticipantCountry.objects.update_or_create(
+            race=race,
+            country=country,
+            **maps.map_country_as_participant(row)
+        )
 
-    for index, row in enumerate(rows):
+    for _, row in jumpers_data_frame.iterrows():
+        jumper, _ = Jumper.objects.update_or_create(**maps.map_team_jumper(row))
+        jump1_data = maps.map_jump(row, "jump1_")
+        jump2_data = maps.map_jump(row, "jump2_")
+        jump1, jump2 = None, None
 
-        if index % 5 != 0:
+        if jump1_data.values():
+            jump1 = Jump.objects.create(**jump1_data)
 
-            for line in row.select(const.ENTRIES_SIMPLE_SELECTOR):
-                entries = list(map(website.get_text, line.select(const.ENTRIES_INDIVIDUAL_SELECTOR)))
-                jumper, _ = Jumper.objects.update_or_create(**maps.map_team_jumper(entries))
-                jump1_data, jump2_data = maps.map_team_jumps(entries)
-                jump1, jump2 = None, None
+        if jump2_data.values():
+            jump2 = Jump.objects.create(**jump2_data)
 
-                if jump1_data:
-                    jump1 = Jump.objects.create(**jump1_data)
+        Participant.objects.update_or_create(
+            race=race,
+            jumper=jumper,
+            jump_1=jump1,
+            jump_2=jump2
 
-                if jump2_data:
-                    jump2 = Jump.objects.create(**jump2_data)
-
-                Participant.objects.update_or_create(race=race,
-                                                     jumper=jumper,
-                                                     jump_1=jump1,
-                                                     jump_2=jump2)
+        )
 
 
 def generate_detail_participants(website, race):
-    rows = website.data_rows
+    rows = list(map(process_rows, website.data_rows))
+    data_frame = get_dataframe(rows)
 
-    for row in rows:
-        country, jumper, jump_1, jump_2, participant, diff, other_params = None, None, None, None, None, None, None
+    try:
+        data_frame.columns = const.DETAILED_COLUMNS
+    except ValueError:
+        race.delete()
+        if data_frame.size == 0:
+            raise RaceDataEmpty
+        raise SomethingWentWrong
 
-        for index, line in enumerate(row.select(const.ENTRIES_DETAILS_SELECTOR)):
-            entries = list(map(website.get_text, line.select(const.ENTRIES_INDIVIDUAL_SELECTOR)))
+    for _, row in data_frame.iterrows():
+        country, _ = Country.objects.update_or_create(name=row.get("nation"))
+        jumper, _ = Jumper.objects.update_or_create(name=row.get("name"),
+                                                    defaults={"nation": country})
+        other_params = maps.map_other_params(row)
+        jump_1 = Jump.objects.create(**maps.map_jump(row, "jump1_"))
+        jump_2 = Jump.objects.create(**maps.map_jump(row, "jump2_"))
 
-            if index == 0:
-                country, _ = Country.objects.update_or_create(**maps.map_jumper_country_detail(entries))
-                jumper, _ = Jumper.objects.update_or_create(**maps.map_details_jumper(entries),
-                                                            defaults={"nation": country})
-                other_params = maps.map_other_params_detail(entries)
-
-            if index == 1:
-                jump_1 = Jump.objects.create(**maps.map_detailed_jump(entries))
-                diff = maps.map_diff_detail(entries).get("diff")
-
-            if index == 2:
-                jump_2 = Jump.objects.create(**maps.map_detailed_jump(entries))
-
-            participant, _ = Participant.objects.update_or_create(jumper=jumper, race=race,
-                                                                  defaults={"jump_1": jump_1, "jump_2": jump_2,
-                                                                            "diff": diff, **other_params})
+        participant, _ = Participant.objects.update_or_create(jumper=jumper, race=race,
+                                                              defaults={
+                                                                  "jump_1": jump_1,
+                                                                  "jump_2": jump_2,
+                                                                  **other_params
+                                                              })
 
 
-def generate_simple_participants(website, race):
-    rows = website.data_rows
-    for row in rows:
-        for line in row.select(const.ENTRIES_SIMPLE_SELECTOR):
+def generate_simple_participants(website: Website, race: Race):
+    rows = list(map(process_rows, website.data_rows))
+    data_frame = get_dataframe(rows)
 
-            jump_1, jump_2 = None, None
-            entries = list(map(website.get_text, line.select(const.ENTRIES_INDIVIDUAL_SELECTOR)))
-            country, _ = Country.objects.update_or_create(**maps.map_jumper_country_simple(entries))
-            jumper_details = maps.map_simple_jumper(entries)
-            jumper, _ = Jumper.objects.update_or_create(name=jumper_details["name"],
-                                                        defaults={"nation": country, **jumper_details})
-            jump_1_details, jump_2_details = maps.map_simple_jump(entries)
+    try:
+        data_frame.drop(columns=52, inplace=True)
+        data_frame.columns = const.SIMPLE_COLUMNS
+    except KeyError:
+        race.delete()
+        raise SomethingWentWrong
+    except ValueError:
+        race.delete()
+        raise SomethingWentWrong
 
-            if jump_1_details:
-                jump_1 = Jump.objects.create(**jump_1_details, **EMPTY_JUMP_DETAILS)
+    for _, row in data_frame.iterrows():
+        jump_1, jump_2 = None, None
+        country, _ = Country.objects.update_or_create(name=row.get("nation"))
+        jumper, _ = Jumper.objects.update_or_create(name=row.get("name"),
+                                                    defaults={
+                                                        "nation": country,
+                                                        "fis_code": row.get("fis_code"),
+                                                        "name": row.get("name"),
+                                                        "born": row.get("year_born")
+                                                    })
 
-            if jump_2_details:
-                jump_2 = Jump.objects.create(**jump_2_details, **EMPTY_JUMP_DETAILS)
+        jump_1_details = maps.map_jump(row, "jump1_")
+        jump_2_details = maps.map_jump(row, "jump2_")
+        if jump_1_details:
+            jump_1 = Jump.objects.create(**jump_1_details)
 
-            Participant.objects.update_or_create(jumper=jumper, jump_1=jump_1, jump_2=jump_2, race=race,
-                                                 **maps.map_other_params_simple(entries))
+        if jump_2_details:
+            jump_2 = Jump.objects.create(**jump_2_details)
+
+        Participant.objects.update_or_create(jumper=jumper, jump_1=jump_1, jump_2=jump_2, race=race,
+                                             **maps.map_other_params(row))
 
 
 def generate_participants(website, race):
@@ -218,45 +231,15 @@ def generate_participants(website, race):
         generate_simple_participants(website, race)
 
 
-def export_csv(queryset):
-    with io.StringIO() as output:
-        model = queryset.model
-        model_fields = model._meta.fields + model._meta.many_to_many
-        field_names = [f.name for f in model_fields if f.name != "id" and f.name != "race"]
-        headers = []
+def export_csv(data: [dict]):
+    data_frame = DataFrame.from_records(data)
+    buffer = io.BytesIO()
+    data_frame.to_csv(buffer, sep=";", index=False, mode="wb", encoding="UTF-8")
 
-        for field_name in [f.name for f in model_fields if f.name != "id" and f.name != "race"]:
-            if field_name == "jump_1" or field_name == "jump_2":
-                headers.extend([f.name for f in Jump._meta.fields if f.name != "id"])
-            else:
-                headers.append(field_name)
+    buffer.tell()
+    buffer.seek(0)
 
-        writer = csv.writer(output, dialect="excel")
-        writer.writerow(headers)
-
-        for row in queryset:
-            values = []
-
-            for field in field_names:
-                value = getattr(row, field, None)
-
-                if type(value) == Jump:
-                    for field_name in [field.name for field in Jump._meta.fields if field.name != "id"]:
-                        values.append(getattr(value, field_name, None))
-                    continue
-
-                if (field == "jump_1" and not value) or (field == "jump_2" and not value):
-                    values.extend(["" for field in Jump._meta.fields if field.name != "id"])
-                    continue
-
-                if value is None and (field != "jump_1" and field != "jump_2"):
-                    value = ""
-
-                values.append(value)
-            writer.writerow(values)
-        output.seek(0)
-
-        return io.BytesIO(output.read().encode("utf8"))
+    return buffer
 
 
 def export_zip(files):
@@ -298,3 +281,81 @@ def get_race(fis_id, details):
         generate_participants(website, race)
 
     return race
+
+
+def get_file(data, filename):
+    participants = data.get("participant_set")
+    countries = data.get("participantcountry_set")
+    file = export_csv(participants)
+
+    if not countries:
+        return file, f"{filename}.csv"
+
+    files = [
+        {
+            "data": file,
+            "filename": filename,
+        },
+        {
+            "data": export_csv(countries),
+            "filename": filename + "_countries",
+        }
+    ]
+    zip_file = export_zip(files)
+
+    return zip_file, f"{filename}.zip"
+
+
+def flatten_list(list_of_lists):
+    flat_list = []
+
+    for item in list_of_lists:
+        if type(item) == list:
+            flat_item = flatten_list(item)
+            for i in flat_item:
+                flat_list.append(i)
+        else:
+            flat_list.append(item)
+
+    return flat_list
+
+
+def extract_content(cell):
+    try:
+        if len(cell.contents) > 1:
+            return list(map(extract_content, cell.contents))
+        return extract_content(cell.contents[0])
+    except AttributeError:
+        if isinstance(cell, Comment):
+            return ""
+        return cell.strip()
+    except IndexError:
+        return ''
+
+
+def process_rows(row):
+    return flatten_list(list(map(extract_content, row.contents)))
+
+
+def fill_countries(entries):
+    country = ""
+
+    for entry in entries:
+        if len(entry[23]) > 0:
+            country = entry[23]
+        else:
+            entry[23] = country
+
+    return entries
+
+
+def get_dataframe(rows: [list]) -> DataFrame:
+    data_frame = DataFrame(rows)
+
+    if data_frame.size == 0:
+        raise RaceDataEmpty
+
+    data_frame.replace("", None, inplace=True)
+    data_frame.dropna(how="all", axis=1, inplace=True)
+
+    return data_frame
