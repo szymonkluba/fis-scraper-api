@@ -146,8 +146,8 @@ STATIC_URL = 'venv/lib/python3.10/site-packages/rest_framework/static/'
 STATIC_ROOT = BASE_DIR
 
 STATICFILES_DIRS = [
-    'venv/lib/python3.10/site-packages/rest_framework/static/',
-    'static',
+    os.environ.get("DRF_STATIC"),
+    os.environ.get("STATIC"),
 ]
 
 # Default primary key field type
