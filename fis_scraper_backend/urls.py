@@ -2,10 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
-import scraper.views
-
 urlpatterns = [
-    path('', scraper.views.index, name="index"),
     path('admin/', admin.site.urls, name='scraper-admin'),
     path('api/', include('scraper.urls'), name='scraper-api'),
     path('openapi/', SpectacularAPIView.as_view(), name='openapi-schema'),

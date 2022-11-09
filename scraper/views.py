@@ -18,11 +18,6 @@ from .utils import get_file
 
 
 @schema(None)
-def index(request):
-    return render(request, "index.html")
-
-
-@schema(None)
 class ApiRoot(APIView):
 
     def get(self, request, format=None, *args, **kwargs):
