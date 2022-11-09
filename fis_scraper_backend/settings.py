@@ -73,7 +73,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            'static/fisscraper/docs'
+            'fisscraper/docs'
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -141,7 +141,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-STATIC_URL = 'venv/lib/python3.10/site-packages/rest_framework/static/'
+STATIC_URL = ""
 
 STATIC_ROOT = BASE_DIR
 
