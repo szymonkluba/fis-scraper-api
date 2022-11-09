@@ -143,6 +143,8 @@ USE_TZ = True
 
 STATIC_URL = ""
 
+MEDIA_URL = "media"
+
 STATIC_ROOT = BASE_DIR
 
 STATICFILES_DIRS = [
