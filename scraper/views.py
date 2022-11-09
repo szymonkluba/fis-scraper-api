@@ -162,7 +162,7 @@ class FolderViewSet(ViewSet):
     serializer_class = FolderSerializer
     lookup_field = "path"
 
-    def get_object(self, path=None):
+    def get_object(self, path=""):
         return list_folder(path)
 
     def list(self, request):
@@ -176,7 +176,7 @@ class FolderViewSet(ViewSet):
         ]
     )
     def retrieve(self, request, path=None):
-        folder = self.get_object(path)
+        folder = self.get_object(f"/{path}" if path else "")
         serializer = FolderSerializer(folder)
         return Response(serializer.data)
 
