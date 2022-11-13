@@ -12,7 +12,7 @@ environ.Env.read_env(os.path.join(settings.BASE_DIR, ".env"))
 
 
 def get_dynamic_content(url):
-    driver_service = Service(ChromeDriverManager().install())
+    driver_service = Service(ChromeDriverManager(version="78.0.3904.105").install())
 
     chrome_options = Options()
     chrome_options.add_argument("--disable-extensions")

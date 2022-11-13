@@ -23,6 +23,7 @@ lxml==4.7.1
 Markdown==3.3.6
 mysqlclient
 outcome==1.1.0
+packaging
 pandas
 ply==3.11
 pycparser==2.21
