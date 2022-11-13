@@ -39,6 +39,7 @@ stone==3.2.1
 trio==0.19.0
 trio-websocket==0.9.2
 urllib3==1.26.7
+webdriver-manager
 whitenoise
 wsproto==1.0.0
 zipp==3.7.0

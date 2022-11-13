@@ -6,14 +6,13 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from django.conf import settings
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 environ.Env.read_env(os.path.join(settings.BASE_DIR, ".env"))
 
 
 def get_dynamic_content(url):
-    chromedriver_path = os.environ.get("CHROMEDRIVER_PATH")
-
-    driver_service = Service(chromedriver_path)
+    driver_service = Service(ChromeDriverManager().install())
 
     chrome_options = Options()
     chrome_options.add_argument("--disable-extensions")
