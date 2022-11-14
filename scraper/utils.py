@@ -174,24 +174,30 @@ def generate_team_participants(website: Website, race):
         )
 
 
-def generate_detail_participants(website, race):
+def generate_detail_participants(website: Website, race: Race):
     rows = list(map(process_rows, website.data_rows))
     data_frame = get_dataframe(rows)
 
     if data_frame.size == 0:
         raise RaceDataEmpty
 
-    try:
-        data_frame.columns = const.DETAILED_COLUMNS
-    except ValueError:
-        try:
-            data_frame.columns = const.DETAILED_COLUMNS_REDUCED
-        except ValueError:
-            race.delete()
+    columns_names_sets = [const.DETAILED_COLUMNS_REDUCED, const.DETAILED_COLUMNS]
+
+    def modify_columns(dataframe):
+        temp_data_frame = copy.deepcopy(dataframe)
+
+        if not len(columns_names_sets):
             raise SomethingWentWrong
+        try:
+            temp_data_frame.columns = columns_names_sets.pop()
+        except ValueError:
+            temp_data_frame = modify_columns(dataframe)
+
+        return temp_data_frame
+
+    data_frame = modify_columns(data_frame)
 
     for _, row in data_frame.iterrows():
-        print(row.get())
         country, _ = Country.objects.update_or_create(name=row.get("nation"))
         jumper, _ = Jumper.objects.update_or_create(
             name=row.get("name"), defaults={"nation": country}

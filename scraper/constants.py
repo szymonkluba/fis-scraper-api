@@ -61,7 +61,7 @@ DETAILED_COLUMNS_REDUCED = [
     "bib",
     "name",
     "nation",
-    "total",
+    "total_points",
     "jump1_speed",
     "jump1_distance",
     "jump1_points",

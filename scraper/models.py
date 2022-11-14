@@ -29,7 +29,7 @@ class Race(models.Model):
     details = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.place} {self.hill_size} {self.date[:10]}{' details' if self.details else ''}"
+        return f"{self.place} {self.hill_size} {str(self.date)[:10]}{' details' if self.details else ''}"
 
 
 class Jumper(models.Model):
@@ -107,7 +107,7 @@ class Participant(models.Model):
 
     def save(self, *args, **kwargs):
         self.disqualified = self.rank is None and self.race.kind != "team"
-        return super(Participant, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.jumper.name} {self.race.place} {self.race.date}"

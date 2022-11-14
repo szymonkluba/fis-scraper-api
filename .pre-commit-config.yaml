@@ -3,15 +3,21 @@ repos:
     rev: v4.3.0
     hooks:
     -   id: trailing-whitespace
+        exclude: ^static/
     -   id: end-of-file-fixer
+        exclude: ^static/
     -   id: check-yaml
+        exclude: ^static/
     -   id: check-added-large-files
+        exclude: ^static/
 -   repo: https://github.com/asottile/pyupgrade
     rev: v3.2.2
     hooks:
     -   id: pyupgrade
         args: [--py36-plus]
+        exclude: ^static/
 -   repo: https://github.com/psf/black
     rev: 22.10.0
     hooks:
     -   id: black
+        exclude: ^static/

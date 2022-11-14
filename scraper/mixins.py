@@ -1,4 +1,4 @@
-class FlattenMixin(object):
+class FlattenMixin:
     """Flatens the specified related objects in this representation"""
 
     def to_representation(self, obj):
@@ -8,7 +8,7 @@ class FlattenMixin(object):
             serializer_class=self.__class__.__name__
         )
 
-        rep = super(FlattenMixin, self).to_representation(obj)
+        rep = super().to_representation(obj)
 
         for field, serializer_class in self.Meta.flatten:
             serializer = serializer_class(context=self.context)
