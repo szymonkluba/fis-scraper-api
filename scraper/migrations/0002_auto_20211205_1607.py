@@ -6,21 +6,21 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scraper', '0001_initial'),
+        ("scraper", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='country',
-            options={'verbose_name_plural': 'Countries'},
+            name="country",
+            options={"verbose_name_plural": "Countries"},
         ),
         migrations.AlterModelOptions(
-            name='participantcountry',
-            options={'verbose_name_plural': 'Participant countries'},
+            name="participantcountry",
+            options={"verbose_name_plural": "Participant countries"},
         ),
         migrations.AddField(
-            model_name='race',
-            name='fis_id',
+            model_name="race",
+            name="fis_id",
             field=models.PositiveIntegerField(default=0),
         ),
     ]

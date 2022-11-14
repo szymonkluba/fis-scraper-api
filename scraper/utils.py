@@ -10,7 +10,15 @@ from pandas import DataFrame
 
 from . import constants as const, maps
 from .exceptions import RaceNotFound, RaceDataEmpty, SomethingWentWrong
-from .models import Country, Jumper, Jump, Participant, ParticipantCountry, Race, Tournament
+from .models import (
+    Country,
+    Jumper,
+    Jump,
+    Participant,
+    ParticipantCountry,
+    Race,
+    Tournament,
+)
 from .sele import get_dynamic_content
 
 
@@ -27,7 +35,9 @@ class Website:
         self.details = details and self.has_details_view()
 
         if self.details:
-            website = get_dynamic_content(f"{const.RACE_URL}{self.race_id}{const.DETAILS_PARAM}")
+            website = get_dynamic_content(
+                f"{const.RACE_URL}{self.race_id}{const.DETAILS_PARAM}"
+            )
             self.soup = BeautifulSoup(website, features="lxml")
 
         self.data_rows = self.get_rows()
@@ -70,7 +80,9 @@ class Website:
         if hill_size:
             return hill_size[0]
 
-        hill_size = re.findall(r"\w+\sHill", self.soup.select_one(const.KIND_SELECTOR).text)
+        hill_size = re.findall(
+            r"\w+\sHill", self.soup.select_one(const.KIND_SELECTOR).text
+        )
         if hill_size:
             return hill_size[0]
 
@@ -113,7 +125,9 @@ def generate_team_participants(website: Website, race):
     rows = list(map(process_rows, website.data_rows))
     rows = fill_countries(rows)
 
-    jumpers_data_frame = DataFrame([rows[index] for index in range(len(rows)) if index % 5 != 0])
+    jumpers_data_frame = DataFrame(
+        [rows[index] for index in range(len(rows)) if index % 5 != 0]
+    )
     countries_data_frame = DataFrame(rows[::5])
 
     jumpers_data_frame.replace("", None, inplace=True)
@@ -136,13 +150,11 @@ def generate_team_participants(website: Website, race):
 
         country, _ = Country.objects.update_or_create(
             name=country_details["name"],
-            defaults={"fis_code": country_details["fis_code"]}
+            defaults={"fis_code": country_details["fis_code"]},
         )
 
         ParticipantCountry.objects.update_or_create(
-            race=race,
-            country=country,
-            **maps.map_country_as_participant(row)
+            race=race, country=country, **maps.map_country_as_participant(row)
         )
 
     for _, row in jumpers_data_frame.iterrows():
@@ -158,11 +170,7 @@ def generate_team_participants(website: Website, race):
             jump2 = Jump.objects.create(**jump2_data)
 
         Participant.objects.update_or_create(
-            race=race,
-            jumper=jumper,
-            jump_1=jump1,
-            jump_2=jump2
-
+            race=race, jumper=jumper, jump_1=jump1, jump_2=jump2
         )
 
 
@@ -185,18 +193,18 @@ def generate_detail_participants(website, race):
     for _, row in data_frame.iterrows():
         print(row.get())
         country, _ = Country.objects.update_or_create(name=row.get("nation"))
-        jumper, _ = Jumper.objects.update_or_create(name=row.get("name"),
-                                                    defaults={"nation": country})
+        jumper, _ = Jumper.objects.update_or_create(
+            name=row.get("name"), defaults={"nation": country}
+        )
         other_params = maps.map_other_params(row)
         jump_1 = Jump.objects.create(**maps.map_jump(row, "jump1_"))
         jump_2 = Jump.objects.create(**maps.map_jump(row, "jump2_"))
 
-        participant, _ = Participant.objects.update_or_create(jumper=jumper, race=race,
-                                                              defaults={
-                                                                  "jump_1": jump_1,
-                                                                  "jump_2": jump_2,
-                                                                  **other_params
-                                                              })
+        participant, _ = Participant.objects.update_or_create(
+            jumper=jumper,
+            race=race,
+            defaults={"jump_1": jump_1, "jump_2": jump_2, **other_params},
+        )
 
 
 def generate_simple_participants(website: Website, race: Race):
@@ -207,7 +215,11 @@ def generate_simple_participants(website: Website, race: Race):
         raise RaceDataEmpty
 
     last_column_indices = [24, 40, 52]
-    columns_names_sets = [const.SIMPLE_COLUMNS_REDUCED, const.SIMPLE_COLUMNS_QUALIFICATION, const.SIMPLE_COLUMNS]
+    columns_names_sets = [
+        const.SIMPLE_COLUMNS_REDUCED,
+        const.SIMPLE_COLUMNS_QUALIFICATION,
+        const.SIMPLE_COLUMNS,
+    ]
 
     def modify_columns(dataframe):
         temp_data_frame = copy.deepcopy(dataframe)
@@ -233,13 +245,15 @@ def generate_simple_participants(website: Website, race: Race):
     for _, row in data_frame.iterrows():
         jump_1, jump_2 = None, None
         country, _ = Country.objects.update_or_create(name=row.get("nation"))
-        jumper, _ = Jumper.objects.update_or_create(name=row.get("name"),
-                                                    defaults={
-                                                        "nation": country,
-                                                        "fis_code": row.get("fis_code"),
-                                                        "name": row.get("name"),
-                                                        "born": row.get("year_born")
-                                                    })
+        jumper, _ = Jumper.objects.update_or_create(
+            name=row.get("name"),
+            defaults={
+                "nation": country,
+                "fis_code": row.get("fis_code"),
+                "name": row.get("name"),
+                "born": row.get("year_born"),
+            },
+        )
 
         jump_1_details = maps.map_jump(row, "jump1_")
         jump_2_details = maps.map_jump(row, "jump2_")
@@ -249,8 +263,13 @@ def generate_simple_participants(website: Website, race: Race):
         if jump_2_details:
             jump_2 = Jump.objects.create(**jump_2_details)
 
-        Participant.objects.update_or_create(jumper=jumper, jump_1=jump_1, jump_2=jump_2, race=race,
-                                             **maps.map_other_params(row))
+        Participant.objects.update_or_create(
+            jumper=jumper,
+            jump_1=jump_1,
+            jump_2=jump_2,
+            race=race,
+            **maps.map_other_params(row),
+        )
 
 
 def generate_participants(website, race):
@@ -289,17 +308,10 @@ def export_csv(data: [dict]):
 def export_zip(files):
     temp_file = io.BytesIO()
 
-    with zipfile.ZipFile(
-            temp_file,
-            "w",
-            zipfile.ZIP_DEFLATED
-    ) as opened_zip:
+    with zipfile.ZipFile(temp_file, "w", zipfile.ZIP_DEFLATED) as opened_zip:
         for file in files:
             file["data"].seek(0)
-            opened_zip.writestr(
-                f"{file['filename']}.csv",
-                file["data"].getvalue()
-            )
+            opened_zip.writestr(f"{file['filename']}.csv", file["data"].getvalue())
 
     temp_file.seek(0)
     return temp_file
@@ -310,7 +322,9 @@ def get_race(fis_id, details):
         race = Race.objects.get(fis_id=fis_id, details=details)
     except Race.DoesNotExist:
         website = Website(fis_id, details)
-        tournament, _ = Tournament.objects.update_or_create(name=website.get_race_tournament())
+        tournament, _ = Tournament.objects.update_or_create(
+            name=website.get_race_tournament()
+        )
 
         race = Race.objects.create(
             fis_id=fis_id,
@@ -319,7 +333,7 @@ def get_race(fis_id, details):
             date=website.get_date(),
             kind=website.get_kind(),
             hill_size=website.get_hill_size(),
-            details=details
+            details=details,
         )
 
         generate_participants(website, race)
@@ -343,7 +357,7 @@ def get_file(data, filename):
         {
             "data": export_csv(countries),
             "filename": filename + "_countries",
-        }
+        },
     ]
     zip_file = export_zip(files)
 
@@ -374,7 +388,7 @@ def extract_content(cell):
             return ""
         return cell.strip()
     except IndexError:
-        return ''
+        return ""
 
 
 def process_rows(row):

@@ -18,25 +18,23 @@ def map_jump(row: Series, prefix):
     wind_points = row.get(prefix + "wind_points")
     total_points = row.get(prefix + "total_points")
 
-    return (
-        {
-            "distance": float(distance) if distance else None,
-            "distance_points": float(distance_points) if distance_points else None,
-            "speed": float(speed) if speed else None,
-            "judge_a": float(judge_a) if judge_a else None,
-            "judge_b": float(judge_b) if judge_b else None,
-            "judge_c": float(judge_c) if judge_c else None,
-            "judge_d": float(judge_d) if judge_d else None,
-            "judge_e": float(judge_e) if judge_e else None,
-            "judge_points": float(judge_points) if judge_points else None,
-            "gate": int(gate) if gate else None,
-            "gate_points": float(gate_points) if gate_points else None,
-            "wind": float(wind) if wind else None,
-            "wind_points": float(wind_points) if wind_points else None,
-            "total_points": float(total_points) if total_points else None,
-            "rank": int(rank) if rank else None,
-        }
-    )
+    return {
+        "distance": float(distance) if distance else None,
+        "distance_points": float(distance_points) if distance_points else None,
+        "speed": float(speed) if speed else None,
+        "judge_a": float(judge_a) if judge_a else None,
+        "judge_b": float(judge_b) if judge_b else None,
+        "judge_c": float(judge_c) if judge_c else None,
+        "judge_d": float(judge_d) if judge_d else None,
+        "judge_e": float(judge_e) if judge_e else None,
+        "judge_points": float(judge_points) if judge_points else None,
+        "gate": int(gate) if gate else None,
+        "gate_points": float(gate_points) if gate_points else None,
+        "wind": float(wind) if wind else None,
+        "wind_points": float(wind_points) if wind_points else None,
+        "total_points": float(total_points) if total_points else None,
+        "rank": int(rank) if rank else None,
+    }
 
 
 def map_team_jumper(row: Series):
@@ -55,10 +53,7 @@ def map_team_country(row: Series):
     fis_code = row.get("fis_code")
     name = row.get("short_name")
 
-    return {
-        "fis_code": int(fis_code) if fis_code else None,
-        "name": name
-    }
+    return {"fis_code": int(fis_code) if fis_code else None, "name": name}
 
 
 def map_other_params(row: Series):
@@ -71,7 +66,7 @@ def map_other_params(row: Series):
         "rank": int(rank) if rank else None,
         "bib": int(bib) if bib else None,
         "total_points": float(total_points) if total_points else None,
-        "diff": float(diff) if diff else None
+        "diff": float(diff) if diff else None,
     }
 
 
@@ -81,5 +76,5 @@ def map_country_as_participant(row: Series):
 
     return {
         "rank": int(rank) if rank else None,
-        "total_points": float(total_points) if total_points else None
+        "total_points": float(total_points) if total_points else None,
     }

@@ -47,5 +47,3 @@ class CommunicationError(APIException):
     status_code = 400
     default_detail = "Storage communication error."
     default_code = "communication_error"
-
-

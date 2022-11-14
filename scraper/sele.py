@@ -15,13 +15,17 @@ environ.Env.read_env(os.path.join(settings.BASE_DIR, ".env"))
 
 def get_dynamic_content(url):
     try:
-        process = subprocess.Popen(["chromium-browser", "-version"], stdout=subprocess.PIPE)
+        process = subprocess.Popen(
+            ["chromium-browser", "-version"], stdout=subprocess.PIPE
+        )
     except FileNotFoundError:
-        process = subprocess.Popen(["google-chrome", "-version"], stdout=subprocess.PIPE)
+        process = subprocess.Popen(
+            ["google-chrome", "-version"], stdout=subprocess.PIPE
+        )
     output = process.communicate()[0]
 
     version_regex = re.compile(r"[0-9.]+", re.MULTILINE)
-    version = re.findall(version_regex, output.decode('utf8').strip())[0]
+    version = re.findall(version_regex, output.decode("utf8").strip())[0]
 
     driver_service = Service(ChromeDriverManager(version=version).install())
 

@@ -12,5 +12,5 @@ router.register("race", views.RaceViewSet, basename="race")
 
 urlpatterns = [
     path("wakie-wakie", views.WakieWakie.as_view(), name="wakie-wakie"),
-    path("", include(router.urls))
+    path("", include(router.urls)),
 ]

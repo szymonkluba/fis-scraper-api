@@ -20,7 +20,9 @@ class Race(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     fis_id = models.PositiveIntegerField(default=0)
     place = models.CharField(max_length=50)
-    tournament = models.ForeignKey("Tournament", related_name="races", on_delete=models.CASCADE)
+    tournament = models.ForeignKey(
+        "Tournament", related_name="races", on_delete=models.CASCADE
+    )
     date = models.DateTimeField()
     kind = models.CharField(max_length=50, choices=RACE_KINDS)
     hill_size = models.CharField(max_length=10)
@@ -34,14 +36,19 @@ class Jumper(models.Model):
     fis_code = models.PositiveIntegerField(null=True, blank=True)
     name = models.CharField(max_length=100)
     born = models.PositiveIntegerField(null=True, blank=True)
-    nation = models.ForeignKey("Country", related_name="jumpers", on_delete=models.CASCADE, null=True, blank=True)
+    nation = models.ForeignKey(
+        "Country",
+        related_name="jumpers",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
         return self.name
 
 
 class Country(models.Model):
-
     class Meta:
         verbose_name_plural = "Countries"
 
@@ -76,20 +83,22 @@ class Jump(models.Model):
 class Participant(models.Model):
     rank = models.PositiveIntegerField(null=True, blank=True)
     bib = models.PositiveIntegerField(null=True, blank=True)
-    jumper = models.ForeignKey("Jumper", related_name="participated", on_delete=models.CASCADE)
+    jumper = models.ForeignKey(
+        "Jumper", related_name="participated", on_delete=models.CASCADE
+    )
     jump_1 = models.ForeignKey(
         "Jump",
         null=True,
         blank=True,
         related_name="first_jumps",
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     jump_2 = models.ForeignKey(
         "Jump",
         null=True,
         blank=True,
         related_name="second_jumps",
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
     )
     race = models.ForeignKey("Race", on_delete=models.CASCADE, to_field="uuid")
     total_points = models.FloatField(null=True, blank=True)
@@ -105,12 +114,13 @@ class Participant(models.Model):
 
 
 class ParticipantCountry(models.Model):
-
     class Meta:
         verbose_name_plural = "Participant countries"
 
     rank = models.PositiveIntegerField(null=True, blank=True)
-    country = models.ForeignKey("Country", related_name="participated_countries", on_delete=models.CASCADE)
+    country = models.ForeignKey(
+        "Country", related_name="participated_countries", on_delete=models.CASCADE
+    )
     race = models.ForeignKey("Race", on_delete=models.CASCADE)
     total_points = models.FloatField(null=True, blank=True)
 
@@ -126,4 +136,6 @@ class FileMetadata(models.Model):
 
 
 class Folder(models.Model):
-    entries = models.ManyToManyField(to="FileMetadata", related_name="folder", related_query_name="folder")
+    entries = models.ManyToManyField(
+        to="FileMetadata", related_name="folder", related_query_name="folder"
+    )

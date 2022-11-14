@@ -12,48 +12,60 @@ from rest_framework.viewsets import ViewSet
 from .dropbox_utils import get_file_data, list_folder, download_file, download_folder
 from .exceptions import InvalidDataProvided
 from .models import Race
-from .serializers import ScrapRaceSerializer, FolderSerializer, FileMetadataSerializer, RaceDetailsSerializer, \
-    RaceListSerializer, MetaRaceSerializer, FlatDataRaceSerializer
+from .serializers import (
+    ScrapRaceSerializer,
+    FolderSerializer,
+    FileMetadataSerializer,
+    RaceDetailsSerializer,
+    RaceListSerializer,
+    MetaRaceSerializer,
+    FlatDataRaceSerializer,
+)
 from .utils import get_file, Website, generate_raw_participants
 
 
 @schema(None)
 class ApiRoot(APIView):
-
     def get(self, request, format=None, *args, **kwargs):
-        return Response({
-            'races': reverse('list-races', request=request, format=format),
-        })
+        return Response(
+            {
+                "races": reverse("list-races", request=request, format=format),
+            }
+        )
 
 
 class RaceViewSet(ViewSet):
-    queryset = Race.objects.prefetch_related("participant_set", "participantcountry_set")
+    queryset = Race.objects.prefetch_related(
+        "participant_set", "participantcountry_set"
+    )
     lookup_field = "uuid"
 
-    @extend_schema(
-        responses=RaceListSerializer
-    )
+    @extend_schema(responses=RaceListSerializer)
     def list(self, request):
         """
         Returns list of all races.
         """
 
         queryset = Race.objects.all()
-        serializer = RaceListSerializer(queryset, many=True, context={'request': request})
+        serializer = RaceListSerializer(
+            queryset, many=True, context={"request": request}
+        )
         return Response(serializer.data)
 
     @extend_schema(
         responses=RaceDetailsSerializer,
         parameters=[
             OpenApiParameter(name="uuid", type=OpenApiTypes.STR, location="path")
-        ]
+        ],
     )
     def retrieve(self, request, uuid=None):
         """
         Returns details of single race.
         """
 
-        queryset = Race.objects.prefetch_related("participant_set", "participantcountry_set")
+        queryset = Race.objects.prefetch_related(
+            "participant_set", "participantcountry_set"
+        )
         race = get_object_or_404(queryset, uuid=uuid)
         serializer = RaceDetailsSerializer(race)
         return Response(serializer.data)
@@ -62,11 +74,13 @@ class RaceViewSet(ViewSet):
         responses=FlatDataRaceSerializer,
         parameters=[
             OpenApiParameter(name="uuid", type=OpenApiTypes.STR, location="path")
-        ]
+        ],
     )
     @action(detail=True, methods=["get"])
     def flat_data(self, request, uuid=None):
-        queryset = Race.objects.prefetch_related("participant_set", "participantcountry_set")
+        queryset = Race.objects.prefetch_related(
+            "participant_set", "participantcountry_set"
+        )
         race = get_object_or_404(queryset, uuid=uuid)
         serializer = FlatDataRaceSerializer(race)
         return Response(serializer.data)
@@ -77,7 +91,9 @@ class ScrapRaceViewSet(ViewSet):
     Scrap single race.
     """
 
-    queryset = Race.objects.prefetch_related("participant_set", "participantcountry_set")
+    queryset = Race.objects.prefetch_related(
+        "participant_set", "participantcountry_set"
+    )
     serializer_class = ScrapRaceSerializer
 
     @extend_schema(
@@ -94,11 +110,13 @@ class ScrapRaceViewSet(ViewSet):
             validated_data = serializer.validated_data
             race = serializer.save()
             file_metadata = FileMetadataSerializer(get_file_data(race))
-            return Response({
-                "fis_id": validated_data.get("fis_id"),
-                "details": validated_data.get("details"),
-                **file_metadata.data,
-            })
+            return Response(
+                {
+                    "fis_id": validated_data.get("fis_id"),
+                    "details": validated_data.get("details"),
+                    **file_metadata.data,
+                }
+            )
 
         raise InvalidDataProvided
 
@@ -154,17 +172,14 @@ class ScrapRaceViewSet(ViewSet):
 
         raise InvalidDataProvided
 
-    @extend_schema(
-        request=ScrapRaceSerializer,
-        responses=OpenApiTypes.BINARY
-    )
+    @extend_schema(request=ScrapRaceSerializer, responses=OpenApiTypes.BINARY)
     @action(detail=False, methods=["post"])
     def raw_data(self, request):
         serializer = ScrapRaceSerializer(data=request.data)
         if serializer.is_valid():
             website = Website(
                 race_id=serializer.data.get("fis_id"),
-                details=serializer.data.get("details", False)
+                details=serializer.data.get("details", False),
             )
             filename = f"{website.get_race_place()}_{website.get_hill_size()}_{website.get_date()}{'_details' if website.details else ''}.csv"
             file = generate_raw_participants(website)
@@ -177,6 +192,7 @@ class FolderViewSet(ViewSet):
     """
     List content of folder on API's Dropbox. If path is not provided list contents of base folder.
     """
+
     serializer_class = FolderSerializer
     lookup_field = "path"
 
@@ -200,11 +216,7 @@ class FolderViewSet(ViewSet):
 
 
 class DownloadViewSet(ViewSet):
-
-    @extend_schema(
-        request=FileMetadataSerializer,
-        responses=OpenApiTypes.BINARY
-    )
+    @extend_schema(request=FileMetadataSerializer, responses=OpenApiTypes.BINARY)
     @action(detail=False, methods=["post"])
     def file(self, request):
         """
@@ -216,10 +228,7 @@ class DownloadViewSet(ViewSet):
             file, filename = download_file(file_metadata.validated_data.get("id"))
             return FileResponse(file, filename=filename, as_attachment=True)
 
-    @extend_schema(
-        request=FileMetadataSerializer,
-        responses=OpenApiTypes.BINARY
-    )
+    @extend_schema(request=FileMetadataSerializer, responses=OpenApiTypes.BINARY)
     @action(detail=False, methods=["post"])
     def folder(self, request):
         """
@@ -231,10 +240,7 @@ class DownloadViewSet(ViewSet):
             file, filename = download_folder(folder_metadata.validated_data.get("id"))
             return FileResponse(file, filename=filename, as_attachment=True)
 
-    @extend_schema(
-        request=FolderSerializer,
-        responses=OpenApiTypes.BINARY
-    )
+    @extend_schema(request=FolderSerializer, responses=OpenApiTypes.BINARY)
     @action(detail=False, methods=["post"])
     def current(self, request):
         """
@@ -249,6 +255,5 @@ class DownloadViewSet(ViewSet):
 
 @schema(None)
 class WakieWakie(APIView):
-
     def get(self, request):
         return Response("Server is up")

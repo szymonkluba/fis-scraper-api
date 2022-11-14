@@ -6,24 +6,42 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scraper', '0005_alter_jump_distance_alter_jump_total_points'),
+        ("scraper", "0005_alter_jump_distance_alter_jump_total_points"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='FileMetadata',
+            name="FileMetadata",
             fields=[
-                ('id', models.CharField(max_length=50, primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=200)),
-                ('path_lower', models.CharField(max_length=200)),
-                ('path_display', models.CharField(max_length=200)),
+                (
+                    "id",
+                    models.CharField(max_length=50, primary_key=True, serialize=False),
+                ),
+                ("name", models.CharField(max_length=200)),
+                ("path_lower", models.CharField(max_length=200)),
+                ("path_display", models.CharField(max_length=200)),
             ],
         ),
         migrations.CreateModel(
-            name='Folder',
+            name="Folder",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('entries', models.ManyToManyField(related_name='folder', related_query_name='folder', to='scraper.FileMetadata')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "entries",
+                    models.ManyToManyField(
+                        related_name="folder",
+                        related_query_name="folder",
+                        to="scraper.FileMetadata",
+                    ),
+                ),
             ],
         ),
     ]

@@ -6,10 +6,21 @@ import environ
 from django.conf import settings
 from django.http import Http404
 from dropbox import Dropbox
-from dropbox.exceptions import ApiError, BadInputError, RateLimitError, AuthError, HttpError
+from dropbox.exceptions import (
+    ApiError,
+    BadInputError,
+    RateLimitError,
+    AuthError,
+    HttpError,
+)
 from dropbox.files import DownloadError
 
-from scraper.exceptions import InvalidDataProvided, TooManyRequests, Unauthorized, CommunicationError
+from scraper.exceptions import (
+    InvalidDataProvided,
+    TooManyRequests,
+    Unauthorized,
+    CommunicationError,
+)
 from scraper.serializers import FlatDataRaceSerializer
 from scraper.utils import export_csv, export_zip
 
@@ -96,7 +107,9 @@ def download_current_files(files):
     temp_folder_name = "/current"
     dbx.files_create_folder_v2(path=temp_folder_name)
     for file in files:
-        dbx.files_copy_v2(from_path=file["path_display"], to_path=f"{temp_folder_name}/{file['name']}")
+        dbx.files_copy_v2(
+            from_path=file["path_display"], to_path=f"{temp_folder_name}/{file['name']}"
+        )
     file, filename = download_folder(temp_folder_name)
     dbx.files_delete_v2(temp_folder_name)
     return file, filename
@@ -121,7 +134,7 @@ def upload_to_dropbox(race):
         {
             "data": export_csv(countries),
             "filename": filename + "_countries",
-        }
+        },
     ]
     zip_file = export_zip(files)
 

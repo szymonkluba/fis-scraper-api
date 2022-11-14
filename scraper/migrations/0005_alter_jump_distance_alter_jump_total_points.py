@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scraper', '0004_alter_race_date'),
+        ("scraper", "0004_alter_race_date"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='jump',
-            name='distance',
+            model_name="jump",
+            name="distance",
             field=models.FloatField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='jump',
-            name='total_points',
+            model_name="jump",
+            name="total_points",
             field=models.FloatField(blank=True, null=True),
         ),
     ]

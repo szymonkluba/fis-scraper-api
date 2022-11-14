@@ -1,15 +1,32 @@
 from rest_framework import serializers
 
 from scraper.mixins import FlattenMixin
-from scraper.models import Race, Tournament, Participant, Jumper, Country, ParticipantCountry, Jump, Folder, \
-    FileMetadata
+from scraper.models import (
+    Race,
+    Tournament,
+    Participant,
+    Jumper,
+    Country,
+    ParticipantCountry,
+    Jump,
+    Folder,
+    FileMetadata,
+)
 from scraper.utils import get_race
 
 
 class RaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Race
-        fields = ['fis_id', 'place', 'tournament', 'date', 'kind', 'hill_size', 'details']
+        fields = [
+            "fis_id",
+            "place",
+            "tournament",
+            "date",
+            "kind",
+            "hill_size",
+            "details",
+        ]
 
     date = serializers.DateTimeField(format="%Y-%m-%d")
     tournament = serializers.SlugRelatedField("name", many=False, read_only=True)
@@ -82,11 +99,20 @@ class RaceDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Race
-        fields = ['fis_id', 'place', 'tournament', 'date', 'kind', 'hill_size', 'details', 'participant_set', 'participantcountry_set']
+        fields = [
+            "fis_id",
+            "place",
+            "tournament",
+            "date",
+            "kind",
+            "hill_size",
+            "details",
+            "participant_set",
+            "participantcountry_set",
+        ]
 
 
 class FlatParticipantSerializer(FlattenMixin, serializers.ModelSerializer):
-
     class Meta:
         model = Participant
         exclude = ["race", "jumper", "jump_1", "jump_2"]
@@ -105,8 +131,7 @@ class FlatDataRaceSerializer(RaceDetailsSerializer):
 class RaceListSerializer(serializers.ModelSerializer):
     tournament = TournamentSerializer(read_only=True)
     uuid = serializers.HyperlinkedIdentityField(
-        view_name="race-detail",
-        lookup_field="uuid"
+        view_name="race-detail", lookup_field="uuid"
     )
 
     class Meta:
