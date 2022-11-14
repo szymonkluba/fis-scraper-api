@@ -14,7 +14,7 @@ from .exceptions import InvalidDataProvided
 from .models import Race
 from .serializers import ScrapRaceSerializer, FolderSerializer, FileMetadataSerializer, RaceDetailsSerializer, \
     RaceListSerializer, MetaRaceSerializer, FlatDataRaceSerializer
-from .utils import get_file
+from .utils import get_file, Website, generate_raw_participants
 
 
 @schema(None)
@@ -150,6 +150,24 @@ class ScrapRaceViewSet(ViewSet):
             race = FlatDataRaceSerializer(race)
             file, filename = get_file(race.data, filename)
 
+            return FileResponse(file, filename=filename, as_attachment=True)
+
+        raise InvalidDataProvided
+
+    @extend_schema(
+        request=ScrapRaceSerializer,
+        responses=OpenApiTypes.BINARY
+    )
+    @action(detail=False, methods=["post"])
+    def raw_data(self, request):
+        serializer = ScrapRaceSerializer(data=request.data)
+        if serializer.is_valid():
+            website = Website(
+                race_id=serializer.data.get("fis_id"),
+                details=serializer.data.get("details", False)
+            )
+            filename = f"{website.get_race_place()}_{website.get_hill_size()}_{website.get_date()}{'_details' if website.details else ''}.csv"
+            file = generate_raw_participants(website)
             return FileResponse(file, filename=filename, as_attachment=True)
 
         raise InvalidDataProvided

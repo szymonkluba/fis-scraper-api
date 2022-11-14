@@ -3,9 +3,8 @@ import datetime
 import io
 import re
 import zipfile
-from pprint import pprint
-
 import requests
+
 from bs4 import BeautifulSoup, Tag, Comment
 from pandas import DataFrame
 
@@ -261,6 +260,19 @@ def generate_participants(website, race):
         generate_detail_participants(website, race)
     else:
         generate_simple_participants(website, race)
+
+
+def generate_raw_participants(website: Website):
+    rows = list(map(process_rows, website.data_rows))
+    data_frame = get_dataframe(rows)
+
+    buffer = io.BytesIO()
+    data_frame.to_csv(buffer, sep=";", index=False, mode="wb", encoding="UTF-8")
+
+    buffer.tell()
+    buffer.seek(0)
+
+    return buffer
 
 
 def export_csv(data: [dict]):
