@@ -124,7 +124,7 @@ def upload_to_dropbox(race):
     file = export_csv(participants)
 
     if not countries:
-        return upload_file(file, filename, serializer.data["tournament"])
+        return upload_file(file, filename, serializer.data["tournament"].get("name"))
 
     files = [
         {
@@ -138,4 +138,4 @@ def upload_to_dropbox(race):
     ]
     zip_file = export_zip(files)
 
-    return upload_zip(zip_file, filename, serializer.data["tournament"])
+    return upload_zip(zip_file, filename, serializer.data["tournament"].get("name"))

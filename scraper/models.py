@@ -29,7 +29,7 @@ class Race(models.Model):
     details = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.place} {self.hill_size} {self.date.strftime('%Y-%m-%d')}{' details' if self.details else ''}"
+        return f"{self.place} {self.hill_size} {self.date[:10]}{' details' if self.details else ''}"
 
 
 class Jumper(models.Model):
