@@ -36,3 +36,12 @@ class JumpAdmin(admin.ModelAdmin):
 class TournamentAdmin(admin.ModelAdmin):
     pass
 
+
+@admin.register(Folder)
+class FolderAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(FileMetadata)
+class FileMetadataAdmin(admin.ModelAdmin):
+    pass

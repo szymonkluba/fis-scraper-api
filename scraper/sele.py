@@ -1,4 +1,6 @@
 import os
+import re
+import subprocess
 from time import sleep
 
 import environ
@@ -12,7 +14,16 @@ environ.Env.read_env(os.path.join(settings.BASE_DIR, ".env"))
 
 
 def get_dynamic_content(url):
-    driver_service = Service(ChromeDriverManager(version="78.0.3904.105").install())
+    try:
+        process = subprocess.Popen(["chromium-browser", "-version"], stdout=subprocess.PIPE)
+    except FileNotFoundError:
+        process = subprocess.Popen(["google-chrome", "-version"], stdout=subprocess.PIPE)
+    output = process.communicate()[0]
+
+    version_regex = re.compile(r"[0-9.]+", re.MULTILINE)
+    version = re.findall(version_regex, output.decode('utf8').strip())[0]
+
+    driver_service = Service(ChromeDriverManager(version=version).install())
 
     chrome_options = Options()
     chrome_options.add_argument("--disable-extensions")

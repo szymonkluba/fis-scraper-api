@@ -1,7 +1,9 @@
+import copy
 import datetime
 import io
 import re
 import zipfile
+from pprint import pprint
 
 import requests
 from bs4 import BeautifulSoup, Tag, Comment
@@ -49,7 +51,15 @@ class Website:
         return self.get_kind() == "team"
 
     def get_date(self):
-        return datetime.datetime.strptime(self.soup.select_one(const.DATE_SELECTOR).text, const.DATE_FORMAT)
+        format = const.DATE_FORMAT
+        date = self.soup.select_one(const.DATE_SELECTOR).text
+        time = self.soup.select_one(const.TIME_SELECTOR)
+        if time:
+            format = const.DATE_TIME_FORMAT
+            time = time.text
+            date = date + " " + time + " +0100"
+
+        return datetime.datetime.strptime(date, format).isoformat(timespec="seconds")
 
     def get_hill_size(self):
         hill_size = re.findall(r"HS\d+", self.soup.select_one(const.KIND_SELECTOR).text)
@@ -161,15 +171,20 @@ def generate_detail_participants(website, race):
     rows = list(map(process_rows, website.data_rows))
     data_frame = get_dataframe(rows)
 
+    if data_frame.size == 0:
+        raise RaceDataEmpty
+
     try:
         data_frame.columns = const.DETAILED_COLUMNS
     except ValueError:
-        race.delete()
-        if data_frame.size == 0:
-            raise RaceDataEmpty
-        raise SomethingWentWrong
+        try:
+            data_frame.columns = const.DETAILED_COLUMNS_REDUCED
+        except ValueError:
+            race.delete()
+            raise SomethingWentWrong
 
     for _, row in data_frame.iterrows():
+        print(row.get())
         country, _ = Country.objects.update_or_create(name=row.get("nation"))
         jumper, _ = Jumper.objects.update_or_create(name=row.get("name"),
                                                     defaults={"nation": country})
@@ -189,15 +204,32 @@ def generate_simple_participants(website: Website, race: Race):
     rows = list(map(process_rows, website.data_rows))
     data_frame = get_dataframe(rows)
 
-    try:
-        data_frame.drop(columns=52, inplace=True)
-        data_frame.columns = const.SIMPLE_COLUMNS
-    except KeyError:
-        race.delete()
-        raise SomethingWentWrong
-    except ValueError:
-        race.delete()
-        raise SomethingWentWrong
+    if data_frame.size == 0:
+        raise RaceDataEmpty
+
+    last_column_indices = [24, 40, 52]
+    columns_names_sets = [const.SIMPLE_COLUMNS_REDUCED, const.SIMPLE_COLUMNS_QUALIFICATION, const.SIMPLE_COLUMNS]
+
+    def modify_columns(dataframe):
+        temp_data_frame = copy.deepcopy(dataframe)
+
+        if not last_column_indices or not columns_names_sets:
+            race.delete()
+            raise SomethingWentWrong
+
+        column_index = last_column_indices.pop()
+        columns_names = columns_names_sets.pop()
+        try:
+            temp_data_frame.drop(columns=column_index, inplace=True)
+            temp_data_frame.columns = columns_names
+        except KeyError:
+            temp_data_frame = modify_columns(dataframe)
+        except ValueError:
+            temp_data_frame = modify_columns(dataframe)
+
+        return temp_data_frame
+
+    data_frame = modify_columns(data_frame)
 
     for _, row in data_frame.iterrows():
         jump_1, jump_2 = None, None
