@@ -9,6 +9,10 @@ RACE_KINDS = (
 )
 
 
+def tournament_directory_path(instance, filename):
+    return f"{instance.tournament}/{filename}"
+
+
 class Tournament(models.Model):
     name = models.CharField(max_length=100)
 
@@ -27,6 +31,7 @@ class Race(models.Model):
     kind = models.CharField(max_length=50, choices=RACE_KINDS)
     hill_size = models.CharField(max_length=10)
     details = models.BooleanField(default=False)
+    file = models.FileField(null=True, blank=True, upload_to=tournament_directory_path)
 
     def __str__(self):
         return f"{self.place} {self.hill_size} {str(self.date)[:10]}{' details' if self.details else ''}"

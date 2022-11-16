@@ -178,3 +178,9 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_COERCE_PATH_PK": False,
 }
+
+DEFAULT_FILE_STORAGE = "storages.backends.dropbox.DropBoxStorage"
+
+DROPBOX_OAUTH2_TOKEN = os.environ.get("DROPBOX_TOKEN")
+
+DROPBOX_WRITE_MODE = "overwrite"

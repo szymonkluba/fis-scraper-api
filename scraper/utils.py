@@ -2,9 +2,8 @@ import copy
 import datetime
 import io
 import re
-import zipfile
-import requests
 
+import requests
 from bs4 import BeautifulSoup, Tag, Comment
 from pandas import DataFrame
 
@@ -300,29 +299,6 @@ def generate_raw_participants(website: Website):
     return buffer
 
 
-def export_csv(data: [dict]):
-    data_frame = DataFrame.from_records(data)
-    buffer = io.BytesIO()
-    data_frame.to_csv(buffer, sep=";", index=False, mode="wb", encoding="UTF-8")
-
-    buffer.tell()
-    buffer.seek(0)
-
-    return buffer
-
-
-def export_zip(files):
-    temp_file = io.BytesIO()
-
-    with zipfile.ZipFile(temp_file, "w", zipfile.ZIP_DEFLATED) as opened_zip:
-        for file in files:
-            file["data"].seek(0)
-            opened_zip.writestr(f"{file['filename']}.csv", file["data"].getvalue())
-
-    temp_file.seek(0)
-    return temp_file
-
-
 def get_race(fis_id, details):
     try:
         race = Race.objects.get(fis_id=fis_id, details=details)
@@ -345,29 +321,6 @@ def get_race(fis_id, details):
         generate_participants(website, race)
 
     return race
-
-
-def get_file(data, filename):
-    participants = data.get("participant_set")
-    countries = data.get("participantcountry_set")
-    file = export_csv(participants)
-
-    if not countries:
-        return file, f"{filename}.csv"
-
-    files = [
-        {
-            "data": file,
-            "filename": filename,
-        },
-        {
-            "data": export_csv(countries),
-            "filename": filename + "_countries",
-        },
-    ]
-    zip_file = export_zip(files)
-
-    return zip_file, f"{filename}.zip"
 
 
 def flatten_list(list_of_lists):

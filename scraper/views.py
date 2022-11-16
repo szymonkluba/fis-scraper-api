@@ -1,5 +1,6 @@
+import datetime
+
 from django.http import FileResponse
-from django.shortcuts import render
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import schema, action
@@ -9,19 +10,17 @@ from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 
-from .dropbox_utils import get_file_data, list_folder, download_file, download_folder
 from .exceptions import InvalidDataProvided
+from .files_utils import generate_file, pack_files
 from .models import Race
 from .serializers import (
     ScrapRaceSerializer,
     FolderSerializer,
-    FileMetadataSerializer,
     RaceDetailsSerializer,
     RaceListSerializer,
-    MetaRaceSerializer,
     FlatDataRaceSerializer,
 )
-from .utils import get_file, Website, generate_raw_participants
+from .utils import Website, generate_raw_participants
 
 
 @schema(None)
@@ -98,7 +97,7 @@ class ScrapRaceViewSet(ViewSet):
 
     @extend_schema(
         request=ScrapRaceSerializer,
-        responses=MetaRaceSerializer,
+        responses=RaceDetailsSerializer,
     )
     def create(self, request):
         """
@@ -107,16 +106,10 @@ class ScrapRaceViewSet(ViewSet):
 
         serializer = ScrapRaceSerializer(data=request.data)
         if serializer.is_valid():
-            validated_data = serializer.validated_data
             race = serializer.save()
-            file_metadata = FileMetadataSerializer(get_file_data(race))
-            return Response(
-                {
-                    "fis_id": validated_data.get("fis_id"),
-                    "details": validated_data.get("details"),
-                    **file_metadata.data,
-                }
-            )
+            generate_file(race)
+            race_serializer = RaceListSerializer(race, context={"request": request})
+            return Response(race_serializer.data)
 
         raise InvalidDataProvided
 
@@ -164,11 +157,10 @@ class ScrapRaceViewSet(ViewSet):
         serializer = ScrapRaceSerializer(data=request.data)
         if serializer.is_valid():
             race = serializer.save()
+            generate_file(race)
             filename = str(race).replace(" ", "_")
-            race = FlatDataRaceSerializer(race)
-            file, filename = get_file(race.data, filename)
 
-            return FileResponse(file, filename=filename, as_attachment=True)
+            return FileResponse(race.file.open(), filename=filename, as_attachment=True)
 
         raise InvalidDataProvided
 
@@ -188,72 +180,57 @@ class ScrapRaceViewSet(ViewSet):
         raise InvalidDataProvided
 
 
-class FolderViewSet(ViewSet):
-    """
-    List content of folder on API's Dropbox. If path is not provided list contents of base folder.
-    """
-
-    serializer_class = FolderSerializer
-    lookup_field = "path"
-
-    def get_object(self, path=""):
-        return list_folder(path)
-
-    def list(self, request):
-        folder = self.get_object()
-        serializer = FolderSerializer(folder)
-        return Response(serializer.data)
+class DownloadViewSet(ViewSet):
+    lookup_field = "uuid"
 
     @extend_schema(
         parameters=[
-            OpenApiParameter(name="path", type=OpenApiTypes.STR, location="path")
-        ]
+            OpenApiParameter(name="uuid", type=OpenApiTypes.STR, location="path")
+        ],
+        responses=OpenApiTypes.BINARY,
     )
-    def retrieve(self, request, path=None):
-        folder = self.get_object(f"/{path}" if path else "")
-        serializer = FolderSerializer(folder)
-        return Response(serializer.data)
-
-
-class DownloadViewSet(ViewSet):
-    @extend_schema(request=FileMetadataSerializer, responses=OpenApiTypes.BINARY)
-    @action(detail=False, methods=["post"])
-    def file(self, request):
+    @action(detail=True, methods=["get"])
+    def file(self, request, uuid=None):
         """
-        Download file from API's Dropbox.
+        Download file.
         """
 
-        file_metadata = FileMetadataSerializer(data=request.data)
-        if file_metadata.is_valid():
-            file, filename = download_file(file_metadata.validated_data.get("id"))
-            return FileResponse(file, filename=filename, as_attachment=True)
-
-    @extend_schema(request=FileMetadataSerializer, responses=OpenApiTypes.BINARY)
-    @action(detail=False, methods=["post"])
-    def folder(self, request):
-        """
-        Download folder from API's Dropbox (as .zip file).
-        """
-
-        folder_metadata = FileMetadataSerializer(data=request.data)
-        if folder_metadata.is_valid():
-            file, filename = download_folder(folder_metadata.validated_data.get("id"))
-            return FileResponse(file, filename=filename, as_attachment=True)
+        queryset = Race.objects.prefetch_related(
+            "participant_set", "participantcountry_set"
+        )
+        race = get_object_or_404(queryset, uuid=uuid)
+        filename = str(race).replace(" ", "_")
+        if not race.file:
+            generate_file(race)
+        file = race.file.open()
+        return FileResponse(file, filename=filename, as_attachment=True)
 
     @extend_schema(request=FolderSerializer, responses=OpenApiTypes.BINARY)
     @action(detail=False, methods=["post"])
-    def current(self, request):
+    def files(self, request):
         """
-        Download specified files from API's Dropbox (as .zip file).
+        Download files (as .zip file).
         """
 
-        folder_metadata = FileMetadataSerializer(data=request.data)
+        folder_metadata = FolderSerializer(data=request.data)
         if folder_metadata.is_valid():
-            file, filename = download_folder(folder_metadata.validated_data.get("id"))
-            return FileResponse(file, filename=filename, as_attachment=True)
+            entries = map(
+                lambda entry: entry.get("uuid"), folder_metadata.data.get("entries")
+            )
+            races = Race.objects.filter(uuid__in=entries, file__isnull=False)
+            files = list(
+                map(
+                    lambda race: {"data": race.file, "filename": race.file.name},
+                    list(races),
+                )
+            )
 
+            zip_file = pack_files(files)
+            filename = (
+                datetime.datetime.now().isoformat(timespec="seconds").replace(":", "")
+                + ".zip"
+            )
 
-@schema(None)
-class WakieWakie(APIView):
-    def get(self, request):
-        return Response("Server is up")
+            return FileResponse(zip_file, filename=filename, as_attachment=True)
+
+        raise InvalidDataProvided

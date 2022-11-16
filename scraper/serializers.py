@@ -100,6 +100,7 @@ class RaceDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Race
         fields = [
+            "uuid",
             "fis_id",
             "place",
             "tournament",
@@ -127,12 +128,13 @@ class FlatDataRaceSerializer(RaceDetailsSerializer):
     participantcountry_set = FlatParticipantCountrySerializer(many=True, read_only=True)
     participant_set = FlatParticipantSerializer(many=True, read_only=True)
 
+    class Meta:
+        model = Race
+        exclude = ["uuid"]
+
 
 class RaceListSerializer(serializers.ModelSerializer):
     tournament = TournamentSerializer(read_only=True)
-    uuid = serializers.HyperlinkedIdentityField(
-        view_name="race-detail", lookup_field="uuid"
-    )
 
     class Meta:
         model = Race
@@ -150,19 +152,21 @@ class ScrapRaceSerializer(serializers.Serializer):
         pass
 
 
-class FileMetadataSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FileMetadata
-        fields = "__all__"
+class FileSerializer(serializers.Serializer):
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+        pass
+
+    uuid = serializers.UUIDField()
 
 
-class FolderSerializer(serializers.ModelSerializer):
-    entries = FileMetadataSerializer(many=True)
+class FolderSerializer(serializers.Serializer):
+    def update(self, instance, validated_data):
+        pass
 
-    class Meta:
-        model = Folder
-        exclude = ["id"]
+    def create(self, validated_data):
+        pass
 
-
-class MetaRaceSerializer(ScrapRaceSerializer, FileMetadataSerializer):
-    pass
+    entries = FileSerializer(many=True)

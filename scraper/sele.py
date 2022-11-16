@@ -24,10 +24,13 @@ def get_dynamic_content(url):
         )
     output = process.communicate()[0]
 
-    version_regex = re.compile(r"[0-9.]+", re.MULTILINE)
+    version_regex = re.compile(r"\d{2,3}\.\d{1,2}", re.MULTILINE)
     version = re.findall(version_regex, output.decode("utf8").strip())[0]
 
-    driver_service = Service(ChromeDriverManager(version=version).install())
+    try:
+        driver_service = Service(ChromeDriverManager(version=version).install())
+    except ValueError:
+        driver_service = Service(executable_path=os.environ.get("CHROMEDRIVER_PATH"))
 
     chrome_options = Options()
     chrome_options.add_argument("--disable-extensions")
