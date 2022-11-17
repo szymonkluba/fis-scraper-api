@@ -9,8 +9,6 @@ from scraper.models import (
     Country,
     ParticipantCountry,
     Jump,
-    Folder,
-    FileMetadata,
 )
 from scraper.utils import get_race
 
@@ -32,10 +30,17 @@ class RaceSerializer(serializers.ModelSerializer):
     tournament = serializers.SlugRelatedField("name", many=False, read_only=True)
 
 
-class CountrySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Country
-        fields = "__all__"
+class CountrySerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=50)
+    fis_code = serializers.IntegerField(allow_null=True)
+
+    def create(self, validated_data):
+        country, _ = Country.objects.get_or_create(name=validated_data["name"])
+        return country
+
+    def update(self, instance, validated_data):
+        country = Country.objects.update(name=validated_data["name"])
+        return country
 
 
 class ParticipantCountrySerializer(serializers.ModelSerializer):
@@ -60,12 +65,39 @@ class JumpSerializer(serializers.ModelSerializer):
         exclude = ["id"]
 
 
-class JumperSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Jumper
-        fields = "__all__"
+class JumperSerializer(serializers.Serializer):
+    fis_code = serializers.IntegerField()
+    born = serializers.IntegerField()
+    name = serializers.CharField(max_length=100)
+    nation = CountrySerializer()
 
-    nation = CountrySerializer(read_only=True)
+    def update(self, instance, validated_data):
+        print(validated_data)
+        country, _ = Country.objects.get_or_create(
+            name=validated_data["nation"]["name"]
+        )
+        jumper = Jumper.objects.update(
+            name=validated_data["name"],
+            fis_code=validated_data["fis_code"],
+            born=validated_data["born"],
+        )
+        jumper.nation = country
+        jumper.save()
+        return jumper
+
+    def create(self, validated_data):
+        print(validated_data)
+        country, _ = Country.objects.get_or_create(
+            name=validated_data["nation"]["name"]
+        )
+        jumper = Jumper.objects.create(
+            name=validated_data["name"],
+            fis_code=validated_data["fis_code"],
+            born=validated_data["born"],
+        )
+        jumper.nation = country
+        jumper.save()
+        return jumper
 
 
 class FlatJumperSerializer(serializers.ModelSerializer):

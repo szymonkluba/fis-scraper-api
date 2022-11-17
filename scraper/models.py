@@ -1,4 +1,5 @@
 import uuid as uuid
+
 from django.db import models
 
 RACE_KINDS = (
@@ -57,8 +58,8 @@ class Country(models.Model):
     class Meta:
         verbose_name_plural = "Countries"
 
-    fis_code = models.PositiveIntegerField(null=True, blank=True)
-    name = models.CharField(max_length=50)
+    fis_code = models.PositiveIntegerField(null=True, blank=True, unique=True)
+    name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name

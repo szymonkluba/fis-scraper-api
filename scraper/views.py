@@ -8,17 +8,19 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
-from rest_framework.viewsets import ViewSet
+from rest_framework.viewsets import ViewSet, ModelViewSet
 
 from .exceptions import InvalidDataProvided
 from .files_utils import generate_file, pack_files
-from .models import Race
+from .models import Race, Jumper, Country
 from .serializers import (
     ScrapRaceSerializer,
     FolderSerializer,
     RaceDetailsSerializer,
     RaceListSerializer,
     FlatDataRaceSerializer,
+    JumperSerializer,
+    CountrySerializer,
 )
 from .utils import Website, generate_raw_participants
 
@@ -234,3 +236,15 @@ class DownloadViewSet(ViewSet):
             return FileResponse(zip_file, filename=filename, as_attachment=True)
 
         raise InvalidDataProvided
+
+
+class JumperViewSet(ModelViewSet):
+    queryset = Jumper.objects.all()
+    serializer_class = JumperSerializer
+    lookup_field = "fis_code"
+
+
+class CountryViewSet(ModelViewSet):
+    queryset = Country.objects.all()
+    serializer_class = CountrySerializer
+    lookup_field = "name"
