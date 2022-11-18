@@ -2,12 +2,12 @@ import uuid as uuid
 
 from django.db import models
 
-RACE_KINDS = (
-    ("team", "Team"),
-    ("men", "Men"),
-    ("women", "Women"),
-    ("other", "Other"),
-)
+
+class RaceKinds(models.TextChoices):
+    TEAM = "team"
+    MEN = "men"
+    WOMEN = "women"
+    OTHER = "other"
 
 
 def tournament_directory_path(instance, filename):
@@ -29,7 +29,7 @@ class Race(models.Model):
         "Tournament", related_name="races", on_delete=models.CASCADE
     )
     date = models.DateTimeField()
-    kind = models.CharField(max_length=50, choices=RACE_KINDS)
+    kind = models.CharField(max_length=50, choices=RaceKinds.choices)
     hill_size = models.CharField(max_length=10)
     details = models.BooleanField(default=False)
     file = models.FileField(null=True, blank=True, upload_to=tournament_directory_path)
@@ -132,16 +132,3 @@ class ParticipantCountry(models.Model):
 
     def __str__(self):
         return f"{self.country.name} {self.race.place} {self.race.date.strftime('%Y-%m-%d')}"
-
-
-class FileMetadata(models.Model):
-    id = models.CharField(max_length=50, primary_key=True)
-    name = models.CharField(max_length=200)
-    path_lower = models.CharField(max_length=200)
-    path_display = models.CharField(max_length=200)
-
-
-class Folder(models.Model):
-    entries = models.ManyToManyField(
-        to="FileMetadata", related_name="folder", related_query_name="folder"
-    )

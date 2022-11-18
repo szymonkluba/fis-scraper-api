@@ -1,3 +1,5 @@
+from scraper.models import RaceKinds
+
 RACE_URL = "https://www.fis-ski.com/DB/general/results.html?sectorcode=JP&raceid="
 DETAILS_PARAM = "#details"
 
@@ -141,3 +143,63 @@ TEAM_JUMPERS_COLUMNS = [
 TEAM_COUNTRIES_COLUMNS = ["rank", "fis_code", "full_name", "short_name", "total_points"]
 
 DETAILS_SELECTOR = "#lnk_details"
+
+FLAT_JSON_RESPONSE = (
+    {
+        "uuid": "string",
+        "fis_id": "number",
+        "place": "string",
+        "tournament": "string",
+        "date": "string",
+        "kind": RaceKinds.values,
+        "hill_size": "string",
+        "details": "boolean",
+        "participant_set": [
+            {
+                "id": 0,
+                "jump_1_distance": 0,
+                "jump_1_distance_points": 0,
+                "jump_1_speed": 0,
+                "jump_1_judge_a": 0,
+                "jump_1_judge_b": 0,
+                "jump_1_judge_c": 0,
+                "jump_1_judge_d": 0,
+                "jump_1_judge_e": 0,
+                "jump_1_judge_points": 0,
+                "jump_1_gate": 2147483647,
+                "jump_1_gate_points": 0,
+                "jump_1_wind": 0,
+                "jump_1_wind_points": 0,
+                "jump_1_total_points": 0,
+                "jump_1_rank": 2147483647,
+                "jump_2_distance": 0,
+                "jump_2_distance_points": 0,
+                "jump_2_speed": 0,
+                "jump_2_judge_a": 0,
+                "jump_2_judge_b": 0,
+                "jump_2_judge_c": 0,
+                "jump_2_judge_d": 0,
+                "jump_2_judge_e": 0,
+                "jump_2_judge_points": 0,
+                "jump_2_gate": 2147483647,
+                "jump_2_gate_points": 0,
+                "jump_2_wind": 0,
+                "jump_2_wind_points": 0,
+                "jump_2_total_points": 0,
+                "jump_2_rank": 2147483647,
+                "jumper_fis_code": 0,
+                "jumper_born": 0,
+                "jumper_name": "string",
+                "jumper_nation": "string",
+                "rank": 4294967295,
+                "bib": 4294967295,
+                "total_points": 0,
+                "diff": 0,
+                "disqualified": "boolean",
+            }
+        ],
+        "particpantcountry_set": [
+            {"id": 0, "country": "string", "rank": 4294967295, "total_points": 0}
+        ],
+    },
+)

@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet, ModelViewSet
 
 from .exceptions import InvalidDataProvided
-from .files_utils import generate_file, pack_files
+from .files_utils import generate_file, pack_files, scrap_tables
 from .models import Race, Jumper, Country
 from .serializers import (
     ScrapRaceSerializer,
@@ -21,6 +21,7 @@ from .serializers import (
     FlatDataRaceSerializer,
     JumperSerializer,
     CountrySerializer,
+    TableSerializer,
 )
 from .utils import Website, generate_raw_participants
 
@@ -149,7 +150,10 @@ class ScrapRaceViewSet(ViewSet):
 
     @extend_schema(
         request=ScrapRaceSerializer,
-        responses=OpenApiTypes.BINARY,
+        responses={
+            (201, "text/csv"): OpenApiTypes.BINARY,
+            (201, "application/zip"): OpenApiTypes.BINARY,
+        },
     )
     @action(detail=False, methods=["post"])
     def csv(self, request):
@@ -166,7 +170,12 @@ class ScrapRaceViewSet(ViewSet):
 
         raise InvalidDataProvided
 
-    @extend_schema(request=ScrapRaceSerializer, responses=OpenApiTypes.BINARY)
+    @extend_schema(
+        request=ScrapRaceSerializer,
+        responses={
+            (201, "text/csv"): OpenApiTypes.BINARY,
+        },
+    )
     @action(detail=False, methods=["post"])
     def raw_data(self, request):
         serializer = ScrapRaceSerializer(data=request.data)
@@ -189,7 +198,10 @@ class DownloadViewSet(ViewSet):
         parameters=[
             OpenApiParameter(name="uuid", type=OpenApiTypes.STR, location="path")
         ],
-        responses=OpenApiTypes.BINARY,
+        responses={
+            (200, "text/csv"): OpenApiTypes.BINARY,
+            (200, "application/zip"): OpenApiTypes.BINARY,
+        },
     )
     @action(detail=True, methods=["get"])
     def file(self, request, uuid=None):
@@ -207,7 +219,12 @@ class DownloadViewSet(ViewSet):
         file = race.file.open()
         return FileResponse(file, filename=filename, as_attachment=True)
 
-    @extend_schema(request=FolderSerializer, responses=OpenApiTypes.BINARY)
+    @extend_schema(
+        request=FolderSerializer,
+        responses={
+            (201, "application/zip"): OpenApiTypes.BINARY,
+        },
+    )
     @action(detail=False, methods=["post"])
     def files(self, request):
         """
@@ -234,6 +251,23 @@ class DownloadViewSet(ViewSet):
             )
 
             return FileResponse(zip_file, filename=filename, as_attachment=True)
+
+        raise InvalidDataProvided
+
+
+@extend_schema(
+    responses={
+        (201, "application/zip"): OpenApiTypes.BINARY,
+    }
+)
+class ScrapTableViewSet(ViewSet):
+    serializer_class = TableSerializer
+
+    def create(self, request):
+        serializer = TableSerializer(data=request.data)
+        if serializer.is_valid():
+            file = scrap_tables(serializer.data.get("url"))
+            return FileResponse(file, filename="tables.zip", as_attachment=True)
 
         raise InvalidDataProvided
 

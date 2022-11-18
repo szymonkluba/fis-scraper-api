@@ -12,8 +12,8 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 import os
 from pathlib import Path
-import environ
 
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -36,7 +36,6 @@ ALLOWED_HOSTS = [
     "www.fisscraper.online",
     "webapp-23877.eu.pythonanywhere.com",
 ]
-
 
 # Application definition
 
@@ -87,7 +86,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "fis_scraper_backend.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
@@ -95,17 +93,15 @@ DATABASES = {
     "default": {
         "ENGINE": os.environ.get("DB_ENGINE"),
         "NAME": os.environ.get("DB_NAME"),
-    }
-    if os.environ.get("DB_ENGINE") == "django.db.backends.sqlite3"
-    else {
-        "ENGINE": os.environ.get("DB_ENGINE"),
-        "NAME": os.environ.get("DB_NAME"),
         "USER": os.environ.get("DB_USER"),
         "PASSWORD": os.environ.get("DB_PWD"),
         "HOST": os.environ.get("DB_HOST"),
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -125,7 +121,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
@@ -136,7 +131,6 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/

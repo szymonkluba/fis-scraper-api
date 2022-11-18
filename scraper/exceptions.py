@@ -47,3 +47,15 @@ class CommunicationError(APIException):
     status_code = 400
     default_detail = "Storage communication error."
     default_code = "communication_error"
+
+
+class AccessDenied(APIException):
+    status_code = 403
+    default_detail = "Cannot access the resource:("
+    default_code = "forbidden"
+
+
+class NoTablesFound(APIException):
+    status_code = 404
+    default_detail = "No tables found:("
+    default_code = "no_tables_found"

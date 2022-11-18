@@ -1,9 +1,12 @@
 import io
+import urllib.error
+import uuid
 import zipfile
 
 from django.core.files import File
-from pandas import DataFrame
+from pandas import DataFrame, read_html
 
+from scraper.exceptions import AccessDenied, NoTablesFound
 from scraper.serializers import FlatDataRaceSerializer
 
 
@@ -91,3 +94,24 @@ def get_file(data, filename):
     zip_file = export_zip(files)
 
     return zip_file, f"{filename}.zip"
+
+
+def scrap_tables(url: str):
+    try:
+        tables = read_html(url, flavor="html5lib")
+    except urllib.error.HTTPError:
+        raise AccessDenied
+    except ValueError:
+        raise NoTablesFound
+
+    def get_csv(dataframe: DataFrame):
+        buffer = io.BytesIO()
+        dataframe.to_csv(buffer, sep=";", index=False, mode="wb", encoding="UTF-8")
+
+        buffer.tell()
+        buffer.seek(0)
+        return {"data": buffer, "filename": str(uuid.uuid4())}
+
+    files = list(map(get_csv, tables))
+
+    return export_zip(files)

@@ -1,5 +1,7 @@
+from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 from rest_framework import serializers
 
+from scraper.constants import FLAT_JSON_RESPONSE
 from scraper.mixins import FlattenMixin
 from scraper.models import (
     Race,
@@ -156,6 +158,17 @@ class FlatParticipantSerializer(FlattenMixin, serializers.ModelSerializer):
         ]
 
 
+@extend_schema_serializer(
+    examples=[
+        OpenApiExample(
+            "Example flat race",
+            summary="Flatten JSON race response",
+            description="Response with flatten nested objects of participants",
+            value=FLAT_JSON_RESPONSE,
+            response_only=True,
+        )
+    ]
+)
 class FlatDataRaceSerializer(RaceDetailsSerializer):
     participantcountry_set = FlatParticipantCountrySerializer(many=True, read_only=True)
     participant_set = FlatParticipantSerializer(many=True, read_only=True)
@@ -202,3 +215,13 @@ class FolderSerializer(serializers.Serializer):
         pass
 
     entries = FileSerializer(many=True)
+
+
+class TableSerializer(serializers.Serializer):
+    def update(self, instance, validated_data):
+        pass
+
+    def create(self, validated_data):
+        pass
+
+    url = serializers.URLField()

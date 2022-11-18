@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import *
 
 
@@ -34,14 +35,4 @@ class JumpAdmin(admin.ModelAdmin):
 
 @admin.register(Tournament)
 class TournamentAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(Folder)
-class FolderAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(FileMetadata)
-class FileMetadataAdmin(admin.ModelAdmin):
     pass
