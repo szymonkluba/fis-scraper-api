@@ -149,7 +149,11 @@ def generate_team_participants(website: Website, race):
 
         country, _ = Country.objects.update_or_create(
             name=country_details["name"],
-            defaults={"fis_code": country_details["fis_code"]},
+            defaults={
+                "fis_code": country_details["fis_code"]
+                if country_details["fis_code"]
+                else 0
+            },
         )
 
         ParticipantCountry.objects.update_or_create(
@@ -163,10 +167,10 @@ def generate_team_participants(website: Website, race):
         jump1, jump2 = None, None
 
         if jump1_data.values():
-            jump1 = Jump.objects.create(**jump1_data)
+            jump1, _ = Jump.objects.get_or_create(**jump1_data)
 
         if jump2_data.values():
-            jump2 = Jump.objects.create(**jump2_data)
+            jump2, _ = Jump.objects.get_or_create(**jump2_data)
 
         Participant.objects.update_or_create(
             race=race, jumper=jumper, jump_1=jump1, jump_2=jump2
@@ -202,8 +206,8 @@ def generate_detail_participants(website: Website, race: Race):
             name=row.get("name"), defaults={"nation": country}
         )
         other_params = maps.map_other_params(row)
-        jump_1 = Jump.objects.create(**maps.map_jump(row, "jump1_"))
-        jump_2 = Jump.objects.create(**maps.map_jump(row, "jump2_"))
+        jump_1, _ = Jump.objects.get_or_create(**maps.map_jump(row, "jump1_"))
+        jump_2, _ = Jump.objects.get_or_create(**maps.map_jump(row, "jump2_"))
 
         participant, _ = Participant.objects.update_or_create(
             jumper=jumper,
@@ -263,10 +267,10 @@ def generate_simple_participants(website: Website, race: Race):
         jump_1_details = maps.map_jump(row, "jump1_")
         jump_2_details = maps.map_jump(row, "jump2_")
         if jump_1_details:
-            jump_1 = Jump.objects.create(**jump_1_details)
+            jump_1, _ = Jump.objects.get_or_create(**jump_1_details)
 
         if jump_2_details:
-            jump_2 = Jump.objects.create(**jump_2_details)
+            jump_2, _ = Jump.objects.get_or_create(**jump_2_details)
 
         Participant.objects.update_or_create(
             jumper=jumper,
@@ -278,12 +282,16 @@ def generate_simple_participants(website: Website, race: Race):
 
 
 def generate_participants(website, race):
-    if website.is_team():
-        generate_team_participants(website, race)
-    elif website.details:
-        generate_detail_participants(website, race)
-    else:
-        generate_simple_participants(website, race)
+    try:
+        if website.is_team():
+            generate_team_participants(website, race)
+        elif website.details:
+            generate_detail_participants(website, race)
+        else:
+            generate_simple_participants(website, race)
+    except RaceDataEmpty:
+        race.delete()
+        raise RaceDataEmpty
 
 
 def generate_raw_participants(website: Website):
