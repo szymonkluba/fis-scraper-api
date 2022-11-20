@@ -14,7 +14,7 @@ KIND_SELECTOR = ".event-header__kind"
 ROW_SIMPLE_SELECTOR = "#ajx_results .g-row.justify-sb"
 ROW_DETAILED_SELECTOR = "#ajx_details .g-row.container"
 COUNTRY_SELECTOR = ".country__name-short"
-FIS_CODE_SELECTOR = "#events-info-results div.g-row.justify-sb > div.g-lg-2.g-md-2.g-sm-2.hidden-xs.justify-right.gray.pr-1:nth-child(3)"
+FIS_CODE_SELECTOR = ".tbody div.g-row.justify-sb > div.g-lg-2.g-md-2.g-sm-2.hidden-xs.justify-right.gray.pr-1:nth-child(3)"
 
 ENTRIES_DETAILS_SELECTOR = "div.g-row.bb-xs"
 ENTRIES_SIMPLE_SELECTOR = "div.g-row.justify-sb"
