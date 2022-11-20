@@ -4,7 +4,8 @@ import io
 import re
 
 import requests
-from bs4 import BeautifulSoup, Tag, Comment
+from bs4 import BeautifulSoup, Comment
+from django.db import IntegrityError
 from pandas import DataFrame
 
 from . import constants as const, maps
@@ -111,13 +112,10 @@ class Website:
 
         return rows
 
-    @staticmethod
-    def get_text(tag: Tag):
-        if tag.select_one(const.COUNTRY_SELECTOR):
-            country = tag.select_one(const.COUNTRY_SELECTOR).string
-            return country.strip() if country else None
-
-        return tag.string.strip() if tag.string else None
+    def get_fis_codes(self):
+        return list(
+            map(lambda tag: tag.text, list(self.soup.select(const.FIS_CODE_SELECTOR)))
+        )
 
 
 def generate_team_participants(website: Website, race):
@@ -149,11 +147,7 @@ def generate_team_participants(website: Website, race):
 
         country, _ = Country.objects.update_or_create(
             name=country_details["name"],
-            defaults={
-                "fis_code": country_details["fis_code"]
-                if country_details["fis_code"]
-                else 0
-            },
+            defaults={"fis_code": country_details["fis_code"]},
         )
 
         ParticipantCountry.objects.update_or_create(
@@ -181,6 +175,8 @@ def generate_detail_participants(website: Website, race: Race):
     rows = list(map(process_rows, website.data_rows))
     data_frame = get_dataframe(rows)
 
+    print(website.get_fis_codes())
+
     if data_frame.size == 0:
         raise RaceDataEmpty
 
@@ -200,10 +196,17 @@ def generate_detail_participants(website: Website, race: Race):
 
     data_frame = modify_columns(data_frame)
 
+    fis_codes = website.get_fis_codes()
+
+    if len(fis_codes) > 0:
+        data_frame = data_frame.assign(fis_code=website.get_fis_codes())
+
     for _, row in data_frame.iterrows():
         country, _ = Country.objects.update_or_create(name=row.get("nation"))
         jumper, _ = Jumper.objects.update_or_create(
-            name=row.get("name"), defaults={"nation": country}
+            name=row.get("name"),
+            fis_code=row.get("fis_code"),
+            defaults={"nation": country},
         )
         other_params = maps.map_other_params(row)
         jump_1, _ = Jump.objects.get_or_create(**maps.map_jump(row, "jump1_"))
@@ -292,6 +295,10 @@ def generate_participants(website, race):
     except RaceDataEmpty:
         race.delete()
         raise RaceDataEmpty
+
+    except IntegrityError:
+        race.delete()
+        raise SomethingWentWrong
 
 
 def generate_raw_participants(website: Website):
