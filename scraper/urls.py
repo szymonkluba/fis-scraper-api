@@ -10,6 +10,7 @@ router.register("race", views.RaceViewSet, basename="race")
 router.register("jumper", views.JumperViewSet, basename="jumper")
 router.register("country", views.CountryViewSet, basename="country")
 router.register("scrap_table", views.ScrapTableViewSet, basename="scrap-table")
+router.register("update", views.UpdateServerViewSet, basename="update")
 
 urlpatterns = [
     path("", include(router.urls)),

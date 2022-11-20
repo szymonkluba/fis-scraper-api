@@ -1,5 +1,7 @@
 import datetime
+import subprocess
 
+import git
 from django.http import FileResponse
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -282,3 +284,14 @@ class CountryViewSet(ModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
     lookup_field = "name"
+
+
+@schema(None)
+class UpdateServerViewSet(ViewSet):
+    def list(self, request):
+        repo = git.Repo("~/fis-scraper-api")
+        origin = repo.remotes.origin
+
+        origin.pull()
+        subprocess.run(["touch", "/var/www/www_fisscraper_online_wsgi.py"])
+        return Response("Updated")
