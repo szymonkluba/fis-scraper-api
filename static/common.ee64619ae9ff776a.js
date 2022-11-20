@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkfis_scraper_frontend=self.webpackChunkfis_scraper_frontend||[]).push([[592],{3403:(r,s,e)=>{e.d(s,{M:()=>_});const _=(0,e(1831).ZF)("spinner")}}]);
