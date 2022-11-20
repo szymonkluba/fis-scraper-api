@@ -27,11 +27,11 @@ def get_dynamic_content(url):
     version_regex = re.compile(r"\d{2,3}\.\d{1,2}", re.MULTILINE)
     version = re.findall(version_regex, output.decode("utf8").strip())[0]
 
+    version = os.environ.get("CHROME_VERSION", version)
+
     try:
-        print(f"Chromedriver version: {version}")
         driver_service = Service(ChromeDriverManager(version=version).install())
     except ValueError as error:
-        print(error)
         driver_service = Service(executable_path=os.environ.get("CHROMEDRIVER_PATH"))
 
     chrome_options = Options()
