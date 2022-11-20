@@ -288,7 +288,7 @@ class CountryViewSet(ModelViewSet):
 
 @schema(None)
 class UpdateServerViewSet(ViewSet):
-    def list(self, request):
+    def create(self, request):
         repo = git.Repo("~/fis-scraper-api")
         origin = repo.remotes.origin
 
