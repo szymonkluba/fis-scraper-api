@@ -4,9 +4,9 @@ import subprocess
 from time import sleep
 
 import environ
+from django.conf import settings
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from django.conf import settings
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
@@ -28,8 +28,10 @@ def get_dynamic_content(url):
     version = re.findall(version_regex, output.decode("utf8").strip())[0]
 
     try:
+        print(f"Chromedriver version: {version}")
         driver_service = Service(ChromeDriverManager(version=version).install())
-    except ValueError:
+    except ValueError as error:
+        print(error)
         driver_service = Service(executable_path=os.environ.get("CHROMEDRIVER_PATH"))
 
     chrome_options = Options()
