@@ -39,7 +39,7 @@ def map_jump(row: Series, prefix):
 
 def map_team_jumper(row: Series):
     fis_code = row.get("fis_code")
-    name = row.get("short_name")
+    name = row.get("name")
     born = row.get("year_born")
 
     return {

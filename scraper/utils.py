@@ -9,7 +9,7 @@ from django.db import IntegrityError
 from pandas import DataFrame
 
 from . import constants as const, maps
-from .exceptions import RaceNotFound, RaceDataEmpty, SomethingWentWrong
+from .exceptions import RaceNotFound, RaceDataEmpty, SomethingWentWrong, NoDetailsView
 from .models import (
     Country,
     Jumper,
@@ -175,8 +175,6 @@ def generate_detail_participants(website: Website, race: Race):
     rows = list(map(process_rows, website.data_rows))
     data_frame = get_dataframe(rows)
 
-    print(website.get_fis_codes())
-
     if data_frame.size == 0:
         raise RaceDataEmpty
 
@@ -319,6 +317,8 @@ def get_race(fis_id, details):
         race = Race.objects.get(fis_id=fis_id, details=details)
     except Race.DoesNotExist:
         website = Website(fis_id, details)
+        if details and not website.has_details_view():
+            raise NoDetailsView
         tournament, _ = Tournament.objects.get_or_create(
             name=website.get_race_tournament()
         )

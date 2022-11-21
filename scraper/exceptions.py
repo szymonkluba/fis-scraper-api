@@ -59,3 +59,9 @@ class NoTablesFound(APIException):
     status_code = 404
     default_detail = "No tables found:("
     default_code = "no_tables_found"
+
+
+class NoDetailsView(APIException):
+    status_code = 400
+    default_detail = "No details view for this race"
+    default_code = "no_details_view"
