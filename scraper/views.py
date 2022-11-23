@@ -113,7 +113,7 @@ class ScrapRaceViewSet(ViewSet):
         if serializer.is_valid():
             race = serializer.save()
             generate_file(race)
-            race_serializer = RaceListSerializer(race, context={"request": request})
+            race_serializer = RaceDetailsSerializer(race, context={"request": request})
             return Response(race_serializer.data)
 
         raise InvalidDataProvided
