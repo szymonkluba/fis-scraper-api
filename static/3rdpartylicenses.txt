@@ -94,6 +94,9 @@ THE SOFTWARE.
 @ngrx/effects
 MIT
 
+@ngrx/router-store
+MIT
+
 @ngrx/store
 MIT
 
