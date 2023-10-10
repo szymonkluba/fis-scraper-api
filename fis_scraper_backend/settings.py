@@ -35,6 +35,8 @@ ALLOWED_HOSTS = [
     "fisscraper.online",
     "www.fisscraper.online",
     "webapp-23877.eu.pythonanywhere.com",
+    "www.fisscraper.eu.org",
+    "fisscraper.eu.org",
 ]
 
 # Application definition
