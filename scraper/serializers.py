@@ -75,11 +75,14 @@ class JumperSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         print(validated_data)
+        name = validated_data["name"].split()
+        name[0] = name[0].upper()
+        name = name.join(" ")
         country, _ = Country.objects.get_or_create(
-            name=validated_data["nation"]["name"]
+            name=validated_data["nation"]["name"].split().
         )
         jumper = Jumper.objects.update(
-            name=validated_data["name"],
+            name=name,
             fis_code=validated_data["fis_code"],
             born=validated_data["born"],
         )
@@ -89,11 +92,14 @@ class JumperSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         print(validated_data)
+        name = validated_data["name"].split()
+        name[0] = name[0].upper()
+        name = name.join(" ")
         country, _ = Country.objects.get_or_create(
             name=validated_data["nation"]["name"]
         )
         jumper = Jumper.objects.create(
-            name=validated_data["name"],
+            name=name,
             fis_code=validated_data["fis_code"],
             born=validated_data["born"],
         )
