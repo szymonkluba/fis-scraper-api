@@ -79,7 +79,7 @@ class JumperSerializer(serializers.Serializer):
         name[0] = name[0].upper()
         name = name.join(" ")
         country, _ = Country.objects.get_or_create(
-            name=validated_data["nation"]["name"].split().
+            name=validated_data["nation"]["name"]
         )
         jumper = Jumper.objects.update(
             name=name,
